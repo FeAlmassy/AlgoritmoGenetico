@@ -8,13 +8,7 @@ def criar_cromossomos(qtd_cromossomos: int = 6, qtd_genes: int = 19) -> np.ndarr
     return -1 + 2 * np.random.rand(qtd_cromossomos, qtd_genes)
 
 
-def atualizar_populacao(
-    cromossomos: np.ndarray,
-    vetor_fitnesses: np.ndarray,
-    filhos: np.ndarray,
-    fitnesses_filhos: np.ndarray,
-    qtd_substituicoes: int = 2,
-) -> np.ndarray:
+def atualizar_populacao(cromossomos: np.ndarray, vetor_fitnesses: np.ndarray,filhos: np.ndarray, fitnesses_filhos: np.ndarray, qtd_substituicoes: int = 2,) -> np.ndarray:
     """
     Steady-state com elitismo: substitui os N piores da população
     pelos N melhores filhos.

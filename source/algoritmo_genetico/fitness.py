@@ -2,35 +2,6 @@
 
 import numpy as np
 
-
-def fitness_binario(
-    cromossomos: np.ndarray,
-    X: np.ndarray,
-    y: np.ndarray,
-) -> np.ndarray:
-    """
-    Fitness Prandiano para classificação binária (2 classes: 0 e 1).
-    fitness = recall_classe_1 * recall_classe_0
-    """
-    total_positivos = np.sum(y == 1)
-    total_negativos = np.sum(y == 0)
-
-    lista_fitness = []
-    for linha in cromossomos:
-        bias = linha[0]
-        genes = linha[1:]
-
-        q = np.dot(X, genes) + bias
-        hipotese = np.where(q >= 0, 1, 0)
-
-        recall_pos = np.sum((hipotese == 1) & (y == 1)) / total_positivos
-        recall_neg = np.sum((hipotese == 0) & (y == 0)) / total_negativos
-
-        lista_fitness.append(recall_pos * recall_neg)
-
-    return np.array(lista_fitness)
-
-
 def fitness_ordinal(
     cromossomos: np.ndarray,
     X: np.ndarray,
