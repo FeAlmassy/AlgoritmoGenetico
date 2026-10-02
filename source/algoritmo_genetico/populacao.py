@@ -3,9 +3,9 @@
 import numpy as np
 
 
-def criar_cromossomos(qtd_cromossomos: int = 6, qtd_genes: int = 19) -> np.ndarray:
-    """Gera população inicial com valores uniformes em [-1, 1]."""
-    return -1 + 2 * np.random.rand(qtd_cromossomos, qtd_genes)
+def criar_cromossomos2(qtd_cromossomos: int = 6, qtd_genes: int = 19, minimo: float = -1.0, maximo: float = 1.0) -> np.ndarray:
+    """Gera a população inicialm com distrubuição uniforme de [-1, +1]."""
+    return np.random.uniform(minimo, maximo, size=(qtd_cromossomos, qtd_genes))
 
 
 def atualizar_populacao(
