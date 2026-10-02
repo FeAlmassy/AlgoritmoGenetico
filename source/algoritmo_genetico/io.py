@@ -1,38 +1,22 @@
-"""Leitura de dados a partir de planilhas."""
-
-import numpy as np
 import pandas as pd
+import numpy as np
 
+'''
+Funcao pra leitura de banco de dados padronizados .xlsx e .csv
+caso nao esteja funcionando verificar o layout do banco de dados
+primeira coluna deve ser somente com as licoes
+ultima coluna somente com as classes
+colunas intermediarias com as features
+'''
 
-def ler_excel(caminho: str) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Lê uma planilha no formato padrão:
-        - 1ª coluna: índice (ignorada)
-        - colunas do meio: features
-        - última coluna: classes (gabarito)
-
-    Retorna (X, y) como arrays numpy.
-    """
-    df = pd.read_excel(caminho)
-
-    X = df.iloc[:, 1:-1].values.astype(float)
-    y = df.iloc[:, -1].values
-
-    return X, y
-
-
-def ler_csv(caminho: str) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Lê um CSV no formato padrão:
-        - 1ª coluna: índice (ignorada)
-        - colunas do meio: features
-        - última coluna: classes (gabarito)
-
-    Retorna (X, y) como arrays numpy.
-    """
+def ler_csv(caminho): 
     df = pd.read_csv(caminho)
+    array_features = df.iloc[ : , 1:-1].to_numpy()
+    array_classes = df.iloc[ : , -1].to_numpy()
+    return array_features, array_classes
 
-    X = df.iloc[:, 1:-1].values.astype(float)
-    y = df.iloc[:, -1].values
-
-    return X, y
+def ler_excel(caminho):
+    df = pd.read_excel(caminho)
+    array_features = df.iloc[ : , 1:-1].to_numpy()
+    array_classes = df.iloc[ : , -1].to_numpy()
+    return array_features, array_classes
