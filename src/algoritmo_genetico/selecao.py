@@ -18,7 +18,8 @@ def _girar_roleta(percentual_fitnesses: np.ndarray) -> int:
     Retorna:
         índice (int) do cromossomo sorteado
     """
-    sorteio = np.random.rand()  # número aleatório entre 0 e 1 (mesmo gerador do resto do projeto)
+
+    sorteio = np.random.rand()  #num aleatorio entre 0 e 1
 
     soma = 0.0
     for indice, chance in enumerate(percentual_fitnesses):
@@ -26,52 +27,40 @@ def _girar_roleta(percentual_fitnesses: np.ndarray) -> int:
         if sorteio < soma:
             return indice
 
-    # se a soma deu 0.9999999 por arredondamento e o sorteio caiu depois, fica com o último
+    # se a soma deu 0.9999999 por arredondamento e o sorteio caiu depois, fica com o último, claude ajudou
     return len(percentual_fitnesses) - 1
 
 
-def selecionar_pais_roleta(
-    cromossomos: np.ndarray,
-    percentual_fitnesses: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray]:
+def selecionar_pais_roleta(cromossomos: np.ndarray, percentual_fitnesses: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Escolhe um pai e uma mãe por roleta: quem tem fitness maior tem mais
     chance de ser sorteado. Pai e mãe podem sair o mesmo cromossomo.
 
     Parâmetros:
-        cromossomos -> array (N, qtd_genes) com a população atual
-        percentual_fitnesses -> array (N,) com a chance de cada um (saída de fitness_percentual)
+        cromossomos -> array com a população atual
+        percentual_fitnesses -> array com a chance de cada um (saída de fitness_percentual)
 
     Retorna:
         tupla (pai, mae), cada um um array (qtd_genes,)
     """
 
     if not isinstance(cromossomos, np.ndarray) or not isinstance(percentual_fitnesses, np.ndarray):
-        raise TypeError(
-            "Os parâmetros cromossomos e percentual_fitnesses devem ser do tipo ndarray"
-        )
+        raise TypeError("Os parâmetros cromossomos e percentual_fitnesses devem ser do tipo ndarray")
 
-    # .ndim é o número de dimensões do array: 2 = matriz (linhas e colunas), 1 = lista simples
+    #ndim e o numero de dimensoes 
     if cromossomos.ndim != 2:
-        raise ValueError(
-            f"cromossomos deve ser uma matriz (N, qtd_genes), recebeu {cromossomos.ndim} dimensões"
-        )
+        raise ValueError(f"cromossomos deve ser uma matriz de duas dimensoes")
 
     if percentual_fitnesses.ndim != 1:
-        raise ValueError(
-            f"percentual_fitnesses deve ser um vetor (N,), "
-            f"recebeu {percentual_fitnesses.ndim} dimensões"
-        )
+        raise ValueError(f"percentual_fitnesses deve ser um vetor")
 
     if len(cromossomos) == 0:
         raise ValueError("cromossomos não pode ser vazio")
 
     if len(cromossomos) != len(percentual_fitnesses):
-        raise ValueError(
-            f"cromossomos tem {len(cromossomos)} linhas, "
-            f"mas percentual_fitnesses tem {len(percentual_fitnesses)} valores"
-        )
+        raise ValueError(f"cromossomos tem {len(cromossomos)} linhas mas percentual_fitnesses tem {len(percentual_fitnesses)} valores")
 
+    #claude ajudou aqui
     for chance in percentual_fitnesses:
         if math.isnan(chance):
             raise ValueError("percentual_fitnesses não pode ter valores NaN")
