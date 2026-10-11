@@ -6,7 +6,7 @@ Em vez de usar gradiente (como a regressão logística), o modelo **evolui** uma
 
 Funciona para:
 - **Classificação binária** (2 classes: 0 e 1)
-- **Classificação ordinal** (K classes com ordem, ex: ruim < médio < bom)
+- **Classificação não binária** (K classes com ordem, ex: ruim < médio < bom)
 
 ---
 
