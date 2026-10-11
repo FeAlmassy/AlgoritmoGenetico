@@ -1,41 +1,49 @@
-"""Loop principal do algoritmo genético."""
-
-from typing import Callable
+"""Loop principal do algoritmo genético: treino (rodar) e previsão (prever)."""
 
 import numpy as np
 
-from .criar_crom import criar_cromossomos
-from .atualizar_crom import atualizar_populacao
-from .fitness import fitness_binario, fitness_ordinal, fitness_percentual
-from .selecao import selecionar_pais_roleta
+from .atualizacao import atualizar_populacao
+from .criacao import criar_cromossomos
 from .cruzamento import cruzar_um_ponto
+from .fitness import fitness_binario, fitness_ordinal, fitness_percentual
 from .mutacao import mutar
+from .selecao import selecionar_pais_roleta
 
 
-def rodar(X: np.ndarray, y: np.ndarray, qtd_cromossomos: int = 6, qtd_genes_mutados: int = 1,
-    qtd_filhos: int = 3, geracoes: int = 100, fitness_alvo: float = 0.90, thresholds: np.ndarray | None = None,
-    verbose: bool = True) -> dict:
+def rodar(
+    X: np.ndarray,
+    y: np.ndarray,
+    qtd_cromossomos: int = 6,
+    qtd_genes_mutados: int = 1,
+    qtd_filhos: int = 3,
+    geracoes: int = 100,
+    fitness_alvo: float = 0.90,
+    thresholds: np.ndarray | None = None,
+    verbose: bool = True,
+) -> dict:
     """
-    Roda o algoritmo genetico completo: cria a populacao e repete
-    fitness -> selecao -> cruzamento -> mutacao -> atualizacao ate atingir
-    o fitness alvo ou acabar as geracoes.
+    Roda o algoritmo genético completo: cria a população e repete
+    fitness -> seleção -> cruzamento -> mutação -> atualização até atingir
+    o fitness alvo ou acabar as gerações.
 
-    Parametros:
+    Parâmetros:
         X -> array (amostras, features) com os dados
         y -> vetor com a classe certa de cada amostra
-        qtd_cromossomos -> tamanho da populacao
-        qtd_genes_mutados -> quantos genes mudar em cada filho na mutacao
-        qtd_filhos -> quantos filhos gerar por geracao
-        geracoes -> numero maximo de geracoes
+        qtd_cromossomos -> tamanho da população
+        qtd_genes_mutados -> quantos genes mudar em cada filho na mutação
+        qtd_filhos -> quantos filhos gerar por geração
+        geracoes -> número máximo de gerações
         fitness_alvo -> para quando o melhor fitness chegar nesse valor
-        thresholds -> None para 2 classes (binario), ou array com K-1 pontos de corte para K classes (ordinal)
-        verbose -> se True, mostra o melhor fitness de cada geracao
+        thresholds -> None para 2 classes (binário), ou array com K-1 pontos de corte
+                      para K classes (ordinal)
+        verbose -> se True, mostra o melhor fitness de cada geração
 
-    Retorna dict com:
-        - "cromossomo": melhor cromossomo encontrado
-        - "fitness": fitness do melhor cromossomo
-        - "geracao": geração em que parou
-        - "thresholds": thresholds usados (None se binário)
+    Retorna:
+        dict com:
+            "cromossomo" -> melhor cromossomo encontrado
+            "fitness" -> fitness do melhor cromossomo
+            "geracao" -> geração em que parou
+            "thresholds" -> thresholds usados (None se binário)
     """
     qtd_genes = X.shape[1] + 1  # features + bias
 
@@ -45,6 +53,7 @@ def rodar(X: np.ndarray, y: np.ndarray, qtd_cromossomos: int = 6, qtd_genes_muta
             return fitness_binario(crom, X, y)
     else:
         thresholds = np.asarray(thresholds)
+
         def calcular(crom):
             return fitness_ordinal(crom, X, y, thresholds)
 
@@ -79,20 +88,23 @@ def rodar(X: np.ndarray, y: np.ndarray, qtd_cromossomos: int = 6, qtd_genes_muta
         filhos = cruzar_um_ponto(pai, mae, qtd_filhos)
         filhos = mutar(filhos, qtd_genes_mutados)
         fitnesses_filhos = calcular(filhos)
-        populacao = atualizar_populacao(
-            populacao, fitnesses, filhos, fitnesses_filhos,
-        )
+        populacao = atualizar_populacao(populacao, fitnesses, filhos, fitnesses_filhos)
 
-    return {"cromossomo": melhor_cromossomo, "fitness": melhor_fitness, "geracao": geracao_final, "thresholds": thresholds,}
+    return {
+        "cromossomo": melhor_cromossomo,
+        "fitness": melhor_fitness,
+        "geracao": geracao_final,
+        "thresholds": thresholds,
+    }
 
 
 def prever(modelo: dict, X: np.ndarray) -> np.ndarray:
     """
     Usa o melhor cromossomo encontrado por rodar() para classificar dados novos.
 
-    Parametros:
+    Parâmetros:
         modelo -> dict retornado por rodar()
-        X -> array (features,) com um registro ou (amostras, features) com varios
+        X -> array (features,) com um registro ou (amostras, features) com vários
 
     Retorna:
         array de inteiros com a classe prevista de cada registro
@@ -110,5 +122,4 @@ def prever(modelo: dict, X: np.ndarray) -> np.ndarray:
 
     if thresholds is None:
         return np.where(q >= 0, 1, 0)
-    else:
-        return np.digitize(q, thresholds)
+    return np.digitize(q, thresholds)
