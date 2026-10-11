@@ -76,7 +76,6 @@ def fitness_ordinal(cromossomos: np.ndarray, X: np.ndarray, y: np.ndarray, thres
     if not isinstance(thresholds, np.ndarray):
         raise TypeError("O parametro thresholds deve ser do tipo ndarray")
 
-    # --- Shape ---
     if cromossomos.shape[1] - 1 != X.shape[1]:
         raise ValueError(
             f"cromossomos tem {cromossomos.shape[1] - 1} pesos (sem bias), "
@@ -91,13 +90,11 @@ def fitness_ordinal(cromossomos: np.ndarray, X: np.ndarray, y: np.ndarray, thres
     if len(thresholds) == 0:
         raise ValueError("thresholds nao pode ser vazio (precisa de pelo menos 1 ponto de corte)")
 
-    # --- Thresholds em ordem crescente (requisito do np.digitize) ---
     if not np.all(np.diff(thresholds) > 0):
         raise ValueError(f"thresholds devem estar em ordem crescente, recebeu {thresholds}")
 
     K = len(thresholds) + 1
 
-    # --- Conteudo de y: inteiros entre 0 e K-1 ---
     valores_unicos = np.unique(y)
     if valores_unicos.min() < 0 or valores_unicos.max() >= K:
         raise ValueError(
@@ -106,7 +103,6 @@ def fitness_ordinal(cromossomos: np.ndarray, X: np.ndarray, y: np.ndarray, thres
 
     totais = np.array([np.sum(y == k) for k in range(K)])
 
-    # --- Pelo menos uma amostra por classe (evita divisao por zero) ---
     if np.any(totais == 0):
         classes_vazias = np.where(totais == 0)[0].tolist()
         raise ValueError(
@@ -114,7 +110,6 @@ def fitness_ordinal(cromossomos: np.ndarray, X: np.ndarray, y: np.ndarray, thres
             f"Classes sem amostras: {classes_vazias}"
         )
 
-    # --- Logica original ---
     lista_fitness = []
     for linha in cromossomos:
         bias = linha[0]
