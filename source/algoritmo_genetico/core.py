@@ -4,7 +4,8 @@ from typing import Callable
 
 import numpy as np
 
-from .atualizar_crom import criar_cromossomos, atualizar_populacao
+from .criar_crom import criar_cromossomos
+from .atualizar_crom import atualizar_populacao
 from .fitness import fitness_binario, fitness_ordinal, fitness_percentual
 from .selecao import selecionar_pais_roleta
 from .cruzamento import cruzar_um_ponto
@@ -23,10 +24,20 @@ def rodar(
     verbose: bool = True,
 ) -> dict:
     """
-    Executa o algoritmo genético para classificação.
+    Roda o algoritmo genetico completo: cria a populacao e repete
+    fitness -> selecao -> cruzamento -> mutacao -> atualizacao ate atingir
+    o fitness alvo ou acabar as geracoes.
 
-    Se `thresholds` for None, usa fitness binário (2 classes).
-    Se `thresholds` for um array, usa fitness ordinal (K classes).
+    Parametros:
+        X -> array (amostras, features) com os dados
+        y -> vetor com a classe certa de cada amostra
+        qtd_cromossomos -> tamanho da populacao
+        qtd_genes_mutados -> quantos genes mudar em cada filho na mutacao
+        qtd_filhos -> quantos filhos gerar por geracao
+        geracoes -> numero maximo de geracoes
+        fitness_alvo -> para quando o melhor fitness chegar nesse valor
+        thresholds -> None para 2 classes (binario), ou array com K-1 pontos de corte para K classes (ordinal)
+        verbose -> se True, mostra o melhor fitness de cada geracao
 
     Retorna dict com:
         - "cromossomo": melhor cromossomo encontrado
@@ -90,10 +101,14 @@ def rodar(
 
 def prever(modelo: dict, X: np.ndarray) -> np.ndarray:
     """
-    Usa o resultado de `rodar()` para classificar novos dados.
+    Usa o melhor cromossomo encontrado por rodar() para classificar dados novos.
 
-    X pode ser 1D (um registro) ou 2D (vários registros).
-    Retorna array de inteiros com as classes previstas.
+    Parametros:
+        modelo -> dict retornado por rodar()
+        X -> array (features,) com um registro ou (amostras, features) com varios
+
+    Retorna:
+        array de inteiros com a classe prevista de cada registro
     """
     cromossomo = modelo["cromossomo"]
     thresholds = modelo["thresholds"]

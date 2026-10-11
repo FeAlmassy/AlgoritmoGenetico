@@ -1,11 +1,22 @@
+# ordem: 1ª etapa (inicio) -> proxima: fitness.py
 """criacao da populacao de cromossomos, 1 funcao"""
 
 import numpy as np
 
 def criar_cromossomos(qtd_cromossomos: int = 6, qtd_genes: int = 19, minimo: float = -1.0, maximo: float = 1.0) -> np.ndarray:
-    
-    """Gera uma população de cromossomos (como um um array, sendo cada linha um cromossomo diferente) com distrubuição uniforme de [-1, +1] por padrao, os limites\
-        inferiores e superiores podem ser modificados nos parametros da funcao."""
+    """
+    Cria a populacao inicial: uma matriz onde cada linha e um cromossomo e
+    cada coluna e um gene, com valores aleatorios entre minimo e maximo.
+
+    Parametros:
+        qtd_cromossomos -> quantos cromossomos (linhas) criar
+        qtd_genes -> quantos genes cada cromossomo tem (features + 1 do bias)
+        minimo -> menor valor que um gene pode ter (padrao -1)
+        maximo -> maior valor que um gene pode ter (padrao +1)
+
+    Retorna:
+        array (qtd_cromossomos, qtd_genes) com a populacao
+    """
 
     if not isinstance(qtd_cromossomos, int) or not isinstance(qtd_genes, int):
         raise TypeError (f"a funcao precisa de valores numericos")

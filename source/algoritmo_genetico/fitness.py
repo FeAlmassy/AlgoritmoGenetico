@@ -1,11 +1,21 @@
-"""Funções para calcular o fitness para classificação binária e ordinal, 2 funcao"""
+# ordem: 2ª etapa, vem depois de criar_crom.py (e de atualizar_crom.py nas proximas geracoes) -> proxima: selecao.py
+"""Funções para calcular o fitness para classificação binária e ordinal, e normalizar em percentuais, 3 funcao"""
 
 import numpy as np
 
 def fitness_binario(cromossomos: np.ndarray, X: np.ndarray, y: np.ndarray) -> np.ndarray:
     """
-    Fitness para classificação binária (2 classes: 0 e 1)
-    
+    Calcula a nota (fitness) de cada cromossomo para classificacao binaria
+    (classes 0 e 1). A nota e o recall da classe 1 vezes o recall da classe 0,
+    entao so e alta se o cromossomo acerta bem as duas classes.
+
+    Parametros:
+        cromossomos -> array (N, qtd_genes), primeiro gene e o bias e o resto sao os pesos
+        X -> array (amostras, features) com os dados
+        y -> vetor com a classe certa de cada amostra (0 ou 1)
+
+    Retorna:
+        array (N,) com o fitness de cada cromossomo, entre 0 e 1
     """
 
     if not isinstance(cromossomos, np.ndarray):
@@ -57,13 +67,18 @@ def fitness_binario(cromossomos: np.ndarray, X: np.ndarray, y: np.ndarray) -> np
 
 def fitness_ordinal(cromossomos: np.ndarray, X: np.ndarray, y: np.ndarray, thresholds: np.ndarray) -> np.ndarray:
     """
-    Fitness Prandiano generalizado para K classes ordinais.
-    fitness = produto dos recalls de cada classe.
+    Calcula a nota (fitness) de cada cromossomo para K classes ordinais
+    (ex: baixo, medio, alto). Os thresholds dividem o resultado em faixas,
+    cada faixa e uma classe. A nota e o produto dos recalls de todas as classes.
 
-    cromossomos -> array criado anteriormente com os genes
-    X -> array dos dados (bias + features)
-    y -> vetor das classes (inteiros de 0 a K-1)
-    thresholds -> array com (K-1) pontos de corte, em ordem crescente
+    Parametros:
+        cromossomos -> array (N, qtd_genes), primeiro gene e o bias e o resto sao os pesos
+        X -> array (amostras, features) com os dados
+        y -> vetor com a classe certa de cada amostra (inteiros de 0 a K-1)
+        thresholds -> array com K-1 pontos de corte, em ordem crescente
+
+    Retorna:
+        array (N,) com o fitness de cada cromossomo, entre 0 e 1
     """
 
     # --- Tipo ---
@@ -126,3 +141,21 @@ def fitness_ordinal(cromossomos: np.ndarray, X: np.ndarray, y: np.ndarray, thres
         lista_fitness.append(fitness)
 
     return np.array(lista_fitness)
+
+
+
+def fitness_percentual(vetor_fitnesses: np.ndarray) -> np.ndarray:
+    """
+    Transforma os fitnesses em porcentagens que somam 1, para usar na roleta.
+    Se todos os fitnesses forem 0, todos recebem a mesma chance.
+
+    Parametros:
+        vetor_fitnesses -> array (N,) com o fitness de cada cromossomo
+
+    Retorna:
+        array (N,) com a chance de cada cromossomo ser escolhido
+    """
+    soma = np.sum(vetor_fitnesses)
+    if soma == 0:
+        return np.ones(len(vetor_fitnesses)) / len(vetor_fitnesses)
+    return vetor_fitnesses / soma
