@@ -4,7 +4,7 @@ from typing import Callable
 
 import numpy as np
 
-from .populacao import criar_cromossomos, atualizar_populacao
+from .atualizar_crom import criar_cromossomos, atualizar_populacao
 from .fitness import fitness_binario, fitness_ordinal, fitness_percentual
 from .selecao import selecionar_pais_roleta
 from .cruzamento import cruzar_um_ponto

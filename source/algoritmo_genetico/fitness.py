@@ -1,13 +1,9 @@
-"""Funções de fitness para classificação binária e ordinal."""
+"""Funções de fitness para classificação binária e ordinal 2 funcao"""
 
 import numpy as np
 
 
-def fitness_binario(
-    cromossomos: np.ndarray,
-    X: np.ndarray,
-    y: np.ndarray,
-) -> np.ndarray:
+def fitness_binario(cromossomos: np.ndarray, X: np.ndarray, y: np.ndarray) -> np.ndarray:
     """
     Fitness Prandiano para classificação binária (2 classes: 0 e 1).
     fitness = recall_classe_1 * recall_classe_0
