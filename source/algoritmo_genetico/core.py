@@ -12,17 +12,9 @@ from .cruzamento import cruzar_um_ponto
 from .mutacao import mutar
 
 
-def rodar(
-    X: np.ndarray,
-    y: np.ndarray,
-    qtd_cromossomos: int = 6,
-    qtd_genes_mutados: int = 1,
-    qtd_filhos: int = 3,
-    geracoes: int = 100,
-    fitness_alvo: float = 0.90,
-    thresholds: np.ndarray | None = None,
-    verbose: bool = True,
-) -> dict:
+def rodar(X: np.ndarray, y: np.ndarray, qtd_cromossomos: int = 6, qtd_genes_mutados: int = 1,
+    qtd_filhos: int = 3, geracoes: int = 100, fitness_alvo: float = 0.90, thresholds: np.ndarray | None = None,
+    verbose: bool = True) -> dict:
     """
     Roda o algoritmo genetico completo: cria a populacao e repete
     fitness -> selecao -> cruzamento -> mutacao -> atualizacao ate atingir
@@ -91,12 +83,7 @@ def rodar(
             populacao, fitnesses, filhos, fitnesses_filhos,
         )
 
-    return {
-        "cromossomo": melhor_cromossomo,
-        "fitness": melhor_fitness,
-        "geracao": geracao_final,
-        "thresholds": thresholds,
-    }
+    return {"cromossomo": melhor_cromossomo, "fitness": melhor_fitness, "geracao": geracao_final, "thresholds": thresholds,}
 
 
 def prever(modelo: dict, X: np.ndarray) -> np.ndarray:
