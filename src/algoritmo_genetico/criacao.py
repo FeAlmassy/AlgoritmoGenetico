@@ -4,24 +4,20 @@
 import numpy as np
 
 
-def criar_cromossomos(
-    qtd_cromossomos: int = 6,
-    qtd_genes: int = 19,
-    minimo: float = -1.0,
-    maximo: float = 1.0,
-) -> np.ndarray:
+def criar_cromossomos(qtd_cromossomos: int = 6, qtd_genes: int = 19,
+    minimo: float = -1.0, maximo: float = 1.0,) -> np.ndarray:
     """
     Cria a população inicial: uma matriz onde cada linha é um cromossomo e
     cada coluna é um gene, com valores aleatórios entre mínimo e máximo.
 
     Parâmetros:
-        qtd_cromossomos -> quantos cromossomos (linhas) criar
+        qtd_cromossomos -> quantos cromossomos criar
         qtd_genes -> quantos genes cada cromossomo tem (features + 1 do bias)
         minimo -> menor valor que um gene pode ter (padrão -1)
         maximo -> maior valor que um gene pode ter (padrão +1)
 
     Retorna:
-        array (qtd_cromossomos, qtd_genes) com a população
+        array com a população de cromossomos criada
     """
 
     if not isinstance(qtd_cromossomos, int) or not isinstance(qtd_genes, int):
