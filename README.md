@@ -179,7 +179,8 @@ AlgoritmoGenetico/
 │       ├── cruzamento.py    # 4. cruzamento de 1 ponto
 │       ├── mutacao.py       # 5. mutação
 │       ├── atualizacao.py   # 6. troca dos piores pelos melhores filhos
-│       └── leitura.py       # leitura de .xlsx e .csv
+│       ├── leitura.py       # leitura de .xlsx e .csv
+│       └── divisao.py       # divisão em treino e teste (estratificada)
 ├── exemplos/                # notebooks e datasets de exemplo
 ├── testes/                  # testes automáticos
 └── requirements.txt
