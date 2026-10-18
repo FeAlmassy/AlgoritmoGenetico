@@ -6,7 +6,7 @@ Em vez de usar gradiente (como a regressão logística), o modelo **evolui** uma
 
 Funciona para:
 - **Classificação binária** (2 classes: 0 e 1)
-- **Classificação não binária** (K classes com ordem, ex: ruim < médio < bom)
+- **Classificação ordinal** (K classes com ordem, ex: ruim < médio < bom)
 
 ---
 
@@ -122,12 +122,16 @@ previsoes = prever(modelo, X_novo)
 | `qtd_cromossomos` | `6` | tamanho da população |
 | `qtd_genes_mutados` | `1` | quantos genes mudam em cada filho |
 | `qtd_filhos` | `3` | quantos filhos por geração |
+| `qtd_substituicoes` | `2` | quantos piores da população são trocados pelos melhores filhos (no máximo o menor entre `qtd_cromossomos` e `qtd_filhos`) |
 | `geracoes` | `100` | número máximo de gerações |
 | `fitness_alvo` | `0.90` | para quando o melhor fitness chega nesse valor |
 | `thresholds` | `None` | `None` = binário; array com K-1 cortes = ordinal |
+| `minimo` | `-1.0` | menor valor dos genes na população inicial |
+| `maximo` | `1.0` | maior valor dos genes na população inicial |
+| `seed` | `None` | semente para reprodutibilidade (`None` = aleatório a cada rodada) |
 | `verbose` | `True` | mostra o melhor fitness de cada geração |
 
-O `rodar` devolve um dicionário com `cromossomo` (o melhor encontrado), `fitness`, `geracao` (em que geração parou) e `thresholds`.
+O `rodar` devolve um dicionário com `cromossomo` (o melhor encontrado), `fitness`, `geracao` (em que geração parou), `thresholds` e `historico` (listas `melhor` e `medio` com a evolução do fitness por geração).
 
 ---
 
