@@ -45,15 +45,17 @@ def rodar(
         minimo -> valor mínimo dos genes na criação da população
         maximo -> valor máximo dos genes na criação da população
         seed -> semente para reprodutibilidade (None = aleatório a cada rodada)
-        verbose -> se True, mostra o melhor fitness de cada geração
+        verbose -> se True, mostra o melhor fitness e a acurácia de cada geração
 
     Retorna:
         dict com:
             "cromossomo" -> melhor cromossomo encontrado
             "fitness" -> fitness do melhor cromossomo
+            "acuracia" -> fração das amostras de X que o melhor cromossomo acerta
             "geracao" -> geração em que parou
             "thresholds" -> thresholds usados (None se binário)
-            "historico" -> dict com evolução do melhor fitness e média por geração
+            "historico" -> dict com evolução do melhor fitness, da média e da
+                           acurácia do melhor por geração
     """
 
     if not isinstance(X, np.ndarray):
@@ -144,8 +146,9 @@ def rodar(
 
     melhor_cromossomo = None
     melhor_fitness = -np.inf
+    melhor_acuracia = 0.0
     geracao_final = 0
-    historico = {"melhor": [], "medio": []}
+    historico = {"melhor": [], "medio": [], "acuracia": []}
 
     for geracao in range(geracoes):
         fitnesses = calcular(populacao)
@@ -160,12 +163,17 @@ def rodar(
             melhor_fitness = fitness_atual
             melhor_cromossomo = populacao[idx_melhor].copy()
 
+            # acurácia = acertos / total, só recalcula quando o melhor muda
+            y_pred = prever({"cromossomo": melhor_cromossomo, "thresholds": thresholds}, X)
+            melhor_acuracia = float(np.mean(y_pred == y))
+
         geracao_final = geracao + 1
         historico["melhor"].append(melhor_fitness)
         historico["medio"].append(float(fitnesses.mean()))
+        historico["acuracia"].append(melhor_acuracia)
 
         if verbose:
-            print(f"Geração {geracao_final:>4} | melhor fitness: {melhor_fitness:.4f}")
+            print(f"Geração {geracao_final:>4} | melhor fitness: {melhor_fitness:.4f} | acurácia: {melhor_acuracia:.2%}")
 
         # critério de parada por fitness alvo
         if melhor_fitness >= fitness_alvo:
@@ -187,6 +195,7 @@ def rodar(
     return {
         "cromossomo": melhor_cromossomo,
         "fitness": melhor_fitness,
+        "acuracia": melhor_acuracia,
         "geracao": geracao_final,
         "thresholds": thresholds,
         "historico": historico,

@@ -129,9 +129,9 @@ previsoes = prever(modelo, X_novo)
 | `minimo` | `-1.0` | menor valor dos genes na população inicial |
 | `maximo` | `1.0` | maior valor dos genes na população inicial |
 | `seed` | `None` | semente para reprodutibilidade (`None` = aleatório a cada rodada) |
-| `verbose` | `True` | mostra o melhor fitness de cada geração |
+| `verbose` | `True` | mostra o melhor fitness e a acurácia de cada geração |
 
-O `rodar` devolve um dicionário com `cromossomo` (o melhor encontrado), `fitness`, `geracao` (em que geração parou), `thresholds` e `historico` (listas `melhor` e `medio` com a evolução do fitness por geração).
+O `rodar` devolve um dicionário com `cromossomo` (o melhor encontrado), `fitness`, `acuracia` (fração de acertos nos dados de treino), `geracao` (em que geração parou), `thresholds` e `historico` (listas `melhor`, `medio` e `acuracia` com a evolução por geração).
 
 ---
 
