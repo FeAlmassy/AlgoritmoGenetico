@@ -71,14 +71,24 @@ O ciclo para quando atinge o fitness alvo ou acaba o número de gerações.
 Requer **Python 3.10+**.
 
 ```bash
+pip install algoritmo-genetico
+```
+
+Ou direto do GitHub:
+
+```bash
+pip install git+https://github.com/FeAlmassy/AlgoritmoGenetico.git
+```
+
+### Para desenvolver
+
+```bash
 git clone https://github.com/FeAlmassy/AlgoritmoGenetico.git
 cd AlgoritmoGenetico
 python -m venv venv_ag
 source venv_ag/bin/activate        # no Windows: venv_ag\Scripts\activate
-pip install -r requirements.txt
+pip install -e .                   # modo editável: mudanças no código valem na hora
 ```
-
-> Ainda não está no PyPI. Por enquanto, adicione a pasta `src` ao caminho do Python para importar a biblioteca (veja o exemplo abaixo).
 
 ---
 
@@ -87,18 +97,17 @@ pip install -r requirements.txt
 ### Binário
 
 ```python
-import sys
-sys.path.insert(0, "src")
-
-from algoritmo_genetico import rodar, prever
-from algoritmo_genetico.leitura import ler_excel
+from algoritmo_genetico import rodar, prever, ler_excel, dividir_treino_teste
 
 X, y = ler_excel("exemplos/exemplo_1_binario/dados_binario_1.xlsx")
+X_treino, X_teste, y_treino, y_teste = dividir_treino_teste(X, y, seed=0)
 
-modelo = rodar(X, y, geracoes=500, fitness_alvo=0.90)
+modelo = rodar(X_treino, y_treino, geracoes=500, fitness_alvo=0.90, seed=0)
 
-previsoes = prever(modelo, X)
+previsoes = prever(modelo, X_teste)
 ```
+
+As funções de cada etapa (`criar_cromossomos`, `fitness_binario`, `selecionar_pais_roleta`, `cruzar_um_ponto`, `mutar`, `atualizar_populacao`) também podem ser usadas separadamente, importando dos seus módulos (ex: `from algoritmo_genetico.mutacao import mutar`).
 
 ### Ordinal (várias classes)
 
@@ -148,7 +157,7 @@ A planilha (`.xlsx` ou `.csv`) deve seguir este layout:
 - **Colunas do meio:** features
 - **Última coluna:** classe
 
-Um modelo pronto está em [`exemplos/base_de_dados_para_exemplos/modelo_base.xlsx`](exemplos/base_de_dados_para_exemplos/modelo_base.xlsx).
+Um modelo pronto está em [`exemplos/base_de_dados_para_exemplos/modelo_base.xlsx`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/exemplos/base_de_dados_para_exemplos/modelo_base.xlsx).
 
 ---
 
@@ -156,8 +165,8 @@ Um modelo pronto está em [`exemplos/base_de_dados_para_exemplos/modelo_base.xls
 
 | Notebook | Dataset | Classes | Acurácia no teste* |
 |---|---|---|---|
-| [`exemplo_binario.ipynb`](exemplos/exemplo_1_binario/exemplo_binario.ipynb) | `dados_binario_1.xlsx` (539 amostras, 18 features) | 2 | **87%** |
-| [`exemplo_multiclasse.ipynb`](exemplos/exemplo_2_multiclasse/exemplo_multiclasse.ipynb) | `dados_multiclasse.xlsx` (261 amostras, 30 features) | 5 | **79%** |
+| [`exemplo_binario.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/exemplos/exemplo_1_binario/exemplo_binario.ipynb) | `dados_binario_1.xlsx` (539 amostras, 18 features) | 2 | **87%** |
+| [`exemplo_multiclasse.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/exemplos/exemplo_2_multiclasse/exemplo_multiclasse.ipynb) | `dados_multiclasse.xlsx` (261 amostras, 30 features) | 5 | **79%** |
 
 \* Treino com 80% dos dados e teste com os 20% restantes, que o modelo nunca viu. Com `np.random.seed(0)`.
 
@@ -171,7 +180,7 @@ O notebook binário mostra **uma geração passo a passo**, chamando cada funç�
 AlgoritmoGenetico/
 ├── src/
 │   └── algoritmo_genetico/
-│       ├── __init__.py      # API pública: rodar, prever
+│       ├── __init__.py      # API pública: rodar, prever, ler_excel, ler_csv, dividir_treino_teste
 │       ├── nucleo.py        # loop principal (rodar) e previsão (prever)
 │       ├── criacao.py       # 1. população inicial
 │       ├── fitness.py       # 2. fitness binário, ordinal e percentual
@@ -183,6 +192,8 @@ AlgoritmoGenetico/
 │       └── divisao.py       # divisão em treino e teste (estratificada)
 ├── exemplos/                # notebooks e datasets de exemplo
 ├── testes/                  # testes automáticos
+├── pyproject.toml           # configuração do pacote (nome, versão, dependências)
+├── LICENSE                  # licença MIT
 └── requirements.txt
 ```
 
@@ -192,7 +203,7 @@ Cada etapa do algoritmo fica em um módulo próprio, então dá para trocar uma 
 
 ## Próximos passos
 
-- [ ] Empacotar com `pyproject.toml` e publicar no PyPI
+- [x] Empacotar com `pyproject.toml` e publicar no PyPI
 - [ ] Testes automáticos com `pytest`
 - [ ] Classe no estilo scikit-learn (`treinar` / `prever`)
 - [ ] Salvar e carregar modelos treinados
@@ -200,6 +211,13 @@ Cada etapa do algoritmo fica em um módulo próprio, então dá para trocar uma 
 
 ---
 
-## Autor
+## Licença
 
-**Fellipe Almassy** — [GitHub](https://github.com/FeAlmassy)
+Distribuído sob a licença [MIT](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/LICENSE): pode usar, modificar e redistribuir livremente, desde que mantenha o aviso de copyright.
+
+---
+
+## Autores
+
+- **Fellipe Almassy** — [GitHub](https://github.com/FeAlmassy)
+- **Matheus Gomes**

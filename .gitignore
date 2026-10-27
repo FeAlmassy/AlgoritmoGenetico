@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 .DS_Store
 testes/*.ipynb
+dist/
+build/
+*.egg-info/
+.dist/
