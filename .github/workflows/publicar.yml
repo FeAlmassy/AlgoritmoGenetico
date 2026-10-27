@@ -1,0 +1,37 @@
+# Publica no PyPI quando uma tag de versão (ex: v1.0.1) é enviada pro GitHub,
+# ou manualmente pela aba Actions -> "Publicar no PyPI" -> Run workflow.
+# Usa Trusted Publishing: não precisa de token, o PyPI confia neste repositório.
+name: Publicar no PyPI
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  montar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install build
+      - run: python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publicar:
+    needs: montar
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # necessário para o Trusted Publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
