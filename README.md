@@ -220,4 +220,4 @@ Distribuído sob a licença [MIT](https://github.com/FeAlmassy/AlgoritmoGenetico
 ## Autores
 
 - **Fellipe Almassy** — [GitHub](https://github.com/FeAlmassy)
-- **Matheus Gomes**
+- **Matheus Gomes** — [GitHub](https://github.com/matheos-hash)
