@@ -1,4 +1,6 @@
-"""Loop principal do algoritmo genético: treino (rodar) e previsão (prever)."""
+"""Loop principal do algoritmo genético: treino (treinar) e previsão (prever)."""
+
+import warnings
 
 import numpy as np
 
@@ -10,15 +12,15 @@ from .mutacao import mutar
 from .selecao import selecionar_pais_roleta
 
 
-def rodar(
+def treinar(
     X: np.ndarray,
     y: np.ndarray,
-    qtd_cromossomos: int = 6,
-    qtd_genes_mutados: int = 1,
-    qtd_filhos: int = 3,
-    qtd_substituicoes: int = 2,
-    geracoes: int = 100,
-    fitness_alvo: float = 0.90,
+    qtd_cromossomos: int = 30,
+    qtd_genes_mutados: int = 2,
+    qtd_filhos: int = 16,
+    qtd_substituicoes: int | None = None,
+    geracoes: int = 1000,
+    fitness_alvo: float = 1.0,
     thresholds: np.ndarray | None = None,
     minimo: float = -1.0,
     maximo: float = 1.0,
@@ -27,7 +29,7 @@ def rodar(
 ) -> dict:
     
     """
-    Roda o algoritmo genético completo, cria a população e repete
+    Treina o modelo com o algoritmo genético completo: cria a população e repete
     fitness -> seleção -> cruzamento -> mutação -> atualização até atingir
     o fitness alvo ou acabar as gerações.
 
@@ -38,8 +40,10 @@ def rodar(
         qtd_genes_mutados -> quantos genes mudar em cada filho na mutação
         qtd_filhos -> quantos filhos gerar por geração
         qtd_substituicoes -> quantos piores pais serão trocados pelos melhores filhos
+                             (None = metade de qtd_filhos, limitado a qtd_cromossomos)
         geracoes -> número máximo de gerações
         fitness_alvo -> para quando o melhor fitness chegar nesse valor
+                        (1.0 = só para se acertar tudo, ou seja, roda todas as gerações)
         thresholds -> None para 2 classes (binário), ou array com K-1 pontos de corte
                       em ordem crescente para K classes (ordinal)
         minimo -> valor mínimo dos genes na criação da população
@@ -91,8 +95,11 @@ def rodar(
     if qtd_filhos <= 0:
         raise ValueError(f"qtd_filhos deve ser >= 1, recebeu {qtd_filhos}")
 
+    if qtd_substituicoes is None:
+        qtd_substituicoes = min(max(qtd_filhos // 2, 1), qtd_cromossomos)
+
     if not isinstance(qtd_substituicoes, int):
-        raise TypeError("qtd_substituicoes deve ser um número inteiro")
+        raise TypeError("qtd_substituicoes deve ser um número inteiro ou None")
 
     if qtd_substituicoes < 0 or qtd_substituicoes > min(qtd_cromossomos, qtd_filhos):
         raise ValueError(f"qtd_substituicoes deve estar entre 0 e {min(qtd_cromossomos, qtd_filhos)} (menor valor entre qtd_cromossomos e qtd_filhos), recebeu {qtd_substituicoes}")
@@ -129,6 +136,9 @@ def rodar(
 
     if seed is not None:
         np.random.seed(seed)
+
+    # converte uma vez só: X @ pesos com X inteiro (ex: saída do ler_csv) é ~6x mais lento que com float
+    X = X.astype(float)
 
     qtd_genes = X.shape[1] + 1 #adicionei o +1 por causa do bias
 
@@ -202,12 +212,25 @@ def rodar(
     }
 
 
+def rodar(*args, **kwargs) -> dict:
+    """
+    Nome antigo de treinar(), mantido para não quebrar código existente.
+    Será removido numa versão futura: use treinar().
+    """
+    warnings.warn(
+        "rodar() foi renomeada para treinar() e será removida numa versão futura",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return treinar(*args, **kwargs)
+
+
 def prever(modelo: dict, X: np.ndarray) -> np.ndarray:
     """
-    Usa o melhor cromossomo encontrado por rodar() para classificar dados novos.
+    Usa o melhor cromossomo encontrado por treinar() para classificar dados novos.
 
     Parâmetros:
-        modelo -> dict retornado por rodar()
+        modelo -> dict retornado por treinar()
         X -> array (features,) com um registro ou (amostras, features) com vários
 
     Retorna:
@@ -215,7 +238,7 @@ def prever(modelo: dict, X: np.ndarray) -> np.ndarray:
     """
 
     if not isinstance(modelo, dict):
-        raise TypeError("O parâmetro modelo deve ser um dict (retornado por rodar())")
+        raise TypeError("O parâmetro modelo deve ser um dict (retornado por treinar())")
 
     if "cromossomo" not in modelo:
         raise ValueError("modelo inválido: falta a chave 'cromossomo'")

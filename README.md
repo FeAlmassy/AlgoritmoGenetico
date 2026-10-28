@@ -97,15 +97,17 @@ pip install -e .                   # modo editável: mudanças no código valem 
 ### Binário
 
 ```python
-from algoritmo_genetico import rodar, prever, ler_excel, dividir_treino_teste
+from algoritmo_genetico import treinar, prever, ler_excel, dividir_treino_teste
 
 X, y = ler_excel("exemplos/exemplo_1_binario/dados_binario_1.xlsx")
 X_treino, X_teste, y_treino, y_teste = dividir_treino_teste(X, y, seed=0)
 
-modelo = rodar(X_treino, y_treino, geracoes=500, fitness_alvo=0.90, seed=0)
+modelo = treinar(X_treino, y_treino, seed=0)    # aprende só com o treino
 
-previsoes = prever(modelo, X_teste)
+previsoes = prever(modelo, X_teste)             # classifica dados que o modelo nunca viu
 ```
+
+> Os valores padrão do `treinar` já dão um bom resultado na maioria dos casos. Ajuste os parâmetros só se precisar.
 
 As funções de cada etapa (`criar_cromossomos`, `fitness_binario`, `selecionar_pais_roleta`, `cruzar_um_ponto`, `mutar`, `atualizar_populacao`) também podem ser usadas separadamente, importando dos seus módulos (ex: `from algoritmo_genetico.mutacao import mutar`).
 
@@ -118,29 +120,31 @@ import numpy as np
 
 thresholds = np.array([-1.5, -0.5, 0.5, 1.5])   # 4 cortes -> 5 classes
 
-modelo = rodar(X, y, thresholds=thresholds, geracoes=2000, fitness_alvo=1.0)
+modelo = treinar(X, y, thresholds=thresholds, geracoes=2000)
 previsoes = prever(modelo, X_novo)
 ```
 
-### Parâmetros do `rodar`
+### Parâmetros do `treinar`
 
 | Parâmetro | Padrão | Descrição |
 |---|---|---|
 | `X` | — | array (amostras, features) com os dados |
 | `y` | — | vetor com a classe de cada amostra |
-| `qtd_cromossomos` | `6` | tamanho da população |
-| `qtd_genes_mutados` | `1` | quantos genes mudam em cada filho |
-| `qtd_filhos` | `3` | quantos filhos por geração |
-| `qtd_substituicoes` | `2` | quantos piores da população são trocados pelos melhores filhos (no máximo o menor entre `qtd_cromossomos` e `qtd_filhos`) |
-| `geracoes` | `100` | número máximo de gerações |
-| `fitness_alvo` | `0.90` | para quando o melhor fitness chega nesse valor |
+| `qtd_cromossomos` | `30` | tamanho da população |
+| `qtd_genes_mutados` | `2` | quantos genes mudam em cada filho |
+| `qtd_filhos` | `16` | quantos filhos por geração |
+| `qtd_substituicoes` | `None` | quantos piores da população são trocados pelos melhores filhos (no máximo o menor entre `qtd_cromossomos` e `qtd_filhos`). `None` = metade de `qtd_filhos` |
+| `geracoes` | `1000` | número máximo de gerações |
+| `fitness_alvo` | `1.0` | para quando o melhor fitness chega nesse valor (`1.0` = roda todas as gerações, a não ser que acerte tudo) |
 | `thresholds` | `None` | `None` = binário; array com K-1 cortes = ordinal |
 | `minimo` | `-1.0` | menor valor dos genes na população inicial |
 | `maximo` | `1.0` | maior valor dos genes na população inicial |
 | `seed` | `None` | semente para reprodutibilidade (`None` = aleatório a cada rodada) |
 | `verbose` | `True` | mostra o melhor fitness e a acurácia de cada geração |
 
-O `rodar` devolve um dicionário com `cromossomo` (o melhor encontrado), `fitness`, `acuracia` (fração de acertos nos dados de treino), `geracao` (em que geração parou), `thresholds` e `historico` (listas `melhor`, `medio` e `acuracia` com a evolução por geração).
+O `treinar` devolve um dicionário com `cromossomo` (o melhor encontrado), `fitness`, `acuracia` (fração de acertos nos dados de treino), `geracao` (em que geração parou), `thresholds` e `historico` (listas `melhor`, `medio` e `acuracia` com a evolução por geração).
+
+> **`rodar` → `treinar`:** a partir da versão 1.1.0, a função `rodar` se chama `treinar`. O nome antigo ainda funciona, mas mostra um aviso (`DeprecationWarning`) e será removido numa versão futura.
 
 ---
 
@@ -180,8 +184,8 @@ O notebook binário mostra **uma geração passo a passo**, chamando cada funç�
 AlgoritmoGenetico/
 ├── src/
 │   └── algoritmo_genetico/
-│       ├── __init__.py      # API pública: rodar, prever, ler_excel, ler_csv, dividir_treino_teste
-│       ├── nucleo.py        # loop principal (rodar) e previsão (prever)
+│       ├── __init__.py      # API pública: treinar, prever, ler_excel, ler_csv, dividir_treino_teste
+│       ├── nucleo.py        # loop principal (treinar) e previsão (prever)
 │       ├── criacao.py       # 1. população inicial
 │       ├── fitness.py       # 2. fitness binário, ordinal e percentual
 │       ├── selecao.py       # 3. seleção por roleta
