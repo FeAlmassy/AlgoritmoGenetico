@@ -146,6 +146,18 @@ O `treinar` devolve um dicionário com `cromossomo` (o melhor encontrado), `fitn
 
 > **`rodar` → `treinar`:** a partir da versão 1.1.0, a função `rodar` se chama `treinar`. O nome antigo ainda funciona, mas mostra um aviso (`DeprecationWarning`) e será removido numa versão futura.
 
+### Ajustando os parâmetros
+
+Os padrões funcionam bem na maioria dos casos. Se precisar ajustar, os parâmetros se afetam entre si:
+
+- **Taxa de renovação = `qtd_substituicoes` ÷ `qtd_cromossomos`:** fração da população trocada a cada geração (padrão: 8 ÷ 30 ≈ 27%). Muito baixa deixa a evolução lenta; perto de 100% a população vira toda filhos do mesmo casal e perde diversidade. Por isso, **aumentar só a população costuma piorar**: aumente as substituições junto, ou deixe `None`.
+- **`qtd_filhos` × `qtd_substituicoes`:** só os melhores filhos entram na população. Com mais filhos do que substituições, os piores filhos são descartados.
+- **`qtd_genes_mutados` × número de features:** o que importa é a fração do cromossomo que muda. Com poucas features, use `1`; com muitas, `2` ou `3`.
+- **Custo ≈ `geracoes` × (`qtd_cromossomos` + `qtd_filhos`) × amostras.**
+- **Explorar × refinar:** população grande e mais mutação procuram soluções novas; renovação alta e pouca mutação melhoram as que já existem.
+
+Para saber se vale dar mais gerações, olhe o final de `modelo["historico"]["melhor"]`: se o fitness ainda está subindo, o modelo não terminou.
+
 ---
 
 ## Formato dos dados
@@ -202,6 +214,15 @@ AlgoritmoGenetico/
 ```
 
 Cada etapa do algoritmo fica em um módulo próprio, então dá para trocar uma peça (por exemplo, testar outra seleção) sem mexer nas outras. Todas as funções verificam os parâmetros recebidos e dão mensagens de erro claras.
+
+---
+
+## Novidades
+
+### 1.1.0
+- `rodar` agora se chama **`treinar`**, formando par com `prever`. O nome antigo continua funcionando, com aviso de depreciação.
+- **Novos valores padrão**, que dão resultados bem melhores sem precisar ajustar nada: `qtd_cromossomos=30`, `qtd_genes_mutados=2`, `qtd_filhos=16`, `qtd_substituicoes=None` (metade dos filhos), `geracoes=1000` e `fitness_alvo=1.0`.
+- `treinar` converte `X` para float internamente, o que deixa o treino até ~6x mais rápido quando os dados são inteiros (como os lidos pelo `ler_csv`).
 
 ---
 
