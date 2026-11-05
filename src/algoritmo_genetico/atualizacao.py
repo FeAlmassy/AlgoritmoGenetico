@@ -15,7 +15,7 @@ def atualizar_populacao(cromossomos: np.ndarray, vetor_fitnesses: np.ndarray, fi
         vetor_fitnesses -> array com o fitness de cada cromossomo da população
         filhos -> array com os filhos mutados
         fitnesses_filhos -> array com o fitness de cada filho
-        qtd_substituicoes -> quantos cromossomos trocar por filhos (no máximo M)
+        qtd_substituicoes -> quantos cromossomos trocar por filhos (no máximo o menor valor entre população e filhos)
 
     Retorna:
         array com a nova população

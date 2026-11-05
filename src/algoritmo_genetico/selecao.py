@@ -49,10 +49,10 @@ def selecionar_pais_roleta(cromossomos: np.ndarray, percentual_fitnesses: np.nda
 
     #ndim e o numero de dimensoes 
     if cromossomos.ndim != 2:
-        raise ValueError(f"cromossomos deve ser uma matriz de duas dimensoes")
+        raise ValueError("cromossomos deve ser uma matriz de duas dimensoes")
 
     if percentual_fitnesses.ndim != 1:
-        raise ValueError(f"percentual_fitnesses deve ser um vetor")
+        raise ValueError("percentual_fitnesses deve ser um vetor")
 
     if len(cromossomos) == 0:
         raise ValueError("cromossomos não pode ser vazio")

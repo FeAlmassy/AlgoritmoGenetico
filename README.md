@@ -97,7 +97,7 @@ pip install -e .                   # modo editável: mudanças no código valem 
 ### Binário
 
 ```python
-from algoritmo_genetico import treinar, prever, ler_excel, dividir_treino_teste
+from algoritmo_genetico import treinar, prever, avaliar, ler_excel, dividir_treino_teste
 
 X, y = ler_excel("exemplos/exemplo_1_binario/dados_binario_1.xlsx")
 X_treino, X_teste, y_treino, y_teste = dividir_treino_teste(X, y, seed=0)
@@ -105,6 +105,7 @@ X_treino, X_teste, y_treino, y_teste = dividir_treino_teste(X, y, seed=0)
 modelo = treinar(X_treino, y_treino, seed=0)    # aprende só com o treino
 
 previsoes = prever(modelo, X_teste)             # classifica dados que o modelo nunca viu
+resultado = avaliar(y_teste, previsoes)      # mostra acurácia, fitness, recall e matriz de confusão
 ```
 
 > Os valores padrão do `treinar` já dão um bom resultado na maioria dos casos. Ajuste os parâmetros só se precisar.
@@ -173,6 +174,13 @@ A planilha (`.xlsx` ou `.csv`) deve seguir este layout:
 - **Colunas do meio:** features
 - **Última coluna:** classe
 
+Para classificar dados novos, que não têm a coluna de classe, use `tem_classe=False`. Nesse caso, a função devolve só o `X`:
+
+```python
+X_novo = ler_excel("dados_novos.xlsx", tem_classe=False)
+previsoes = prever(modelo, X_novo)
+```
+
 Um modelo pronto está em [`exemplos/base_de_dados_para_exemplos/modelo_base.xlsx`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/exemplos/base_de_dados_para_exemplos/modelo_base.xlsx).
 
 ---
@@ -196,8 +204,9 @@ O notebook binário mostra **uma geração passo a passo**, chamando cada funç�
 AlgoritmoGenetico/
 ├── src/
 │   └── algoritmo_genetico/
-│       ├── __init__.py      # API pública: treinar, prever, ler_excel, ler_csv, dividir_treino_teste
+│       ├── __init__.py      # API pública: treinar, prever, avaliar, matriz_confusao, ler_excel, ler_csv, dividir_treino_teste
 │       ├── nucleo.py        # loop principal (treinar) e previsão (prever)
+│       ├── avaliacao.py     # avaliação do modelo (avaliar) e matriz de confusão
 │       ├── criacao.py       # 1. população inicial
 │       ├── fitness.py       # 2. fitness binário, ordinal e percentual
 │       ├── selecao.py       # 3. seleção por roleta
