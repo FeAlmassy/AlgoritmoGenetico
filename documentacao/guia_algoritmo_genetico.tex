@@ -1,0 +1,1966 @@
+\documentclass[11pt,a4paper]{article}
+
+% ------------------------------------------------------------------
+% Pacotes
+% ------------------------------------------------------------------
+\usepackage{fontspec}
+\usepackage[brazil]{babel}
+\usepackage[a4paper,margin=2.5cm,headheight=14pt]{geometry}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage[hidelinks]{hyperref}
+
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric,fit}
+\pgfplotsset{compat=1.18}
+
+% ------------------------------------------------------------------
+% Cores
+% ------------------------------------------------------------------
+\definecolor{azul}{HTML}{2A78D6}
+\definecolor{laranja}{HTML}{EB6834}
+\definecolor{agua}{HTML}{1BAF7A}
+\definecolor{amarelo}{HTML}{EDA100}
+\definecolor{tinta}{HTML}{0B0B0B}
+\definecolor{tinta2}{HTML}{52514E}
+\definecolor{linha}{HTML}{D9D8D3}
+\definecolor{fundo}{HTML}{F5F4F1}
+
+\hypersetup{colorlinks=true,linkcolor=azul,urlcolor=azul,citecolor=azul,
+  pdftitle={Algoritmo Genético para Classificação},
+  pdfauthor={Fellipe Almassy; Matheus Gomes}}
+
+% ------------------------------------------------------------------
+% Texto e títulos
+% ------------------------------------------------------------------
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\raggedbottom
+\widowpenalty=10000
+\clubpenalty=10000
+\setcounter{secnumdepth}{0}
+\setcounter{tocdepth}{1}
+\AtBeginDocument{\shorthandoff{"}}
+
+\titleformat{\part}[display]{\normalfont\color{azul}\bfseries\Large}{\partname\ \thepart}{0.3em}{\color{tinta}\Huge}
+\titlespacing*{\part}{0pt}{0pt}{0.3em}
+\newcommand{\titulosecao}[1]{\parbox[t]{\linewidth}{#1\par\vspace{3pt}{\color{linha}\hrule height 0.6pt}}}
+\titleformat{\section}[block]{\normalfont\Large\bfseries\color{tinta}}{}{0pt}{\titulosecao}
+\titleformat{\subsection}{\normalfont\large\bfseries\color{tinta}}{}{0pt}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries\color{tinta2}}{}{0pt}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.7em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+\titlespacing*{\subsubsection}{0pt}{1em}{0.3em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{tinta2}Algoritmo Genético para Classificação}
+\fancyhead[R]{\small\color{tinta2}\nouppercase{\leftmark}}
+\fancyfoot[C]{\small\color{tinta2}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{{\color{linha}\hrule width\headwidth height\headrulewidth}}
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+
+\captionsetup{font=small,labelfont=bf,labelsep=period,justification=centering,skip=8pt}
+\setlist{itemsep=0.2em,topsep=0.3em,leftmargin=1.5em}
+
+\newcommand{\falta}[1]{\colorbox{amarelo!35}{\small #1}}
+\newcommand{\metodo}{10 sementes, 500 gerações, fitness alvo de 1,0 e os valores padrão nos demais parâmetros, com a base \code{dados_binario_1.xlsx}}
+\newcommand{\Pa}[1]{\mathrm{Pa}_{\mathrm{classe}\,#1}}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\newtcolorbox{nota}{enhanced,breakable,colback=azul!6,colframe=azul!6,
+  borderline west={2.5pt}{0pt}{azul},arc=0pt,outer arc=0pt,
+  left=9pt,right=8pt,top=6pt,bottom=6pt,before skip=0.8em,after skip=0.8em}
+
+\newenvironment{tabela}{\par\nopagebreak[4]\vspace{0.3em}\nopagebreak[4]\begingroup\centering\small}{\par\endgroup\vspace{0.6em}}
+
+% ------------------------------------------------------------------
+% Código
+% ------------------------------------------------------------------
+\lstdefinestyle{base}{
+  basicstyle=\ttfamily\footnotesize\color{tinta},
+  frame=none,aboveskip=0pt,belowskip=0pt,
+  xleftmargin=0pt,xrightmargin=0pt,
+  columns=fullflexible,keepspaces=true,upquote=true,showstringspaces=false,
+  breaklines=true,breakatwhitespace=true,
+  extendedchars=true
+}
+\lstdefinestyle{python}{style=base,language=Python,
+  keywordstyle=\color{azul}\bfseries,
+  stringstyle=\color{agua!70!black},
+  commentstyle=\color{tinta2}\itshape,
+  morekeywords={with,as}}
+\lstdefinestyle{saida}{style=base,columns=fixed,basewidth=0.53em}
+\tcbset{codigo/.style={listing only,enhanced,arc=0pt,outer arc=0pt,
+  left=8pt,right=8pt,top=5pt,bottom=5pt,
+  before={\par\nopagebreak[4]\vspace{0.5em}\nopagebreak[4]\noindent},
+  after={\par\vspace{0.5em}}}}
+\newtcblisting{py}{codigo,boxrule=0pt,colback=fundo,colframe=fundo,listing options={style=python}}
+\newtcblisting{saida}{codigo,boxrule=0.8pt,colback=white,colframe=linha,listing options={style=saida}}
+
+% ------------------------------------------------------------------
+% Figuras: blocos reutilizados
+% ------------------------------------------------------------------
+\tikzset{
+  etapa/.style={draw=azul,fill=azul!8,rounded corners=3pt,line width=0.7pt,align=center,
+    minimum height=1.05cm,text width=2.35cm,font=\small},
+  funcao/.style={draw=azul,fill=azul!8,rounded corners=3pt,line width=0.7pt,align=center,
+    minimum height=0.8cm,inner sep=5pt,font=\ttfamily\small},
+  dado/.style={draw=linha,fill=fundo,rounded corners=8pt,line width=0.6pt,align=center,
+    minimum height=0.65cm,inner sep=4pt,font=\ttfamily\footnotesize},
+  seta/.style={-{Stealth[length=2.2mm]},line width=0.7pt,color=tinta2},
+  rotulo/.style={font=\footnotesize,color=tinta2},
+}
+
+% \celula{x}{y}{texto}{preenchimento}
+\newcommand{\celula}[4]{%
+  \node[draw=white,line width=1.2pt,fill=#4,minimum width=1.15cm,minimum height=0.62cm,
+    inner sep=0pt,font=\small,text=tinta] at (#1,#2) {#3};}
+
+% \cmcell{coluna}{linha}{valor}{maximo}{largura}
+\newcommand{\cmcell}[5]{%
+  \pgfmathsetmacro{\intens}{8+80*#3/#4}%
+  \pgfmathsetmacro{\escuro}{ifthenelse(\intens>62,1,0)}%
+  \ifdim\escuro pt>0.5pt\def\corval{white}\else\def\corval{tinta}\fi
+  \node[draw=white,line width=1.2pt,fill=azul!\intens,minimum width=#5 cm,minimum height=#5 cm,
+    inner sep=0pt,text=\corval,font=\small] at (#1*#5,-#2*#5) {#3};}
+
+\begin{document}
+
+% ------------------------------------------------------------------
+% Capa
+% ------------------------------------------------------------------
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+  \thispagestyle{empty}
+  \vspace*{3cm}
+  {\color{azul}\rule{2.5cm}{3pt}}\par\vspace{0.8cm}
+  {\fontsize{32}{38}\selectfont\bfseries\color{tinta} Algoritmo Genético\\ para Classificação\par}
+  \vspace{0.7cm}
+  {\Large\color{tinta2} Como o algoritmo funciona e como usar a biblioteca\par}
+  \vspace{1.6cm}
+
+  \begin{center}
+  \begin{tikzpicture}[x=1.15cm,y=0.72cm]
+    \foreach \v [count=\i] in {{0,24},{0,73},{$-0{,}68$},{0,98},{$-0{,}83$},{0,27}} {\celula{\i}{0}{\v}{azul!18}}
+    \foreach \v [count=\i] in {{$-0{,}74$},{0,42},{0,42},{0,22},{0,34},{$-0{,}10$}} {\celula{\i}{-1}{\v}{laranja!18}}
+    \foreach \v/\c [count=\i] in {{0,24}/azul!18,{0,73}/azul!18,{$-0{,}68$}/azul!18,{0,22}/laranja!18,{0,34}/laranja!18,{$-0{,}10$}/laranja!18} {\celula{\i}{-2.6}{\v}{\c}}
+    \draw[seta] (3.5,-1.55) -- (3.5,-2.1);
+    \node[rotulo,anchor=east] at (0.4,0) {pai};
+    \node[rotulo,anchor=east] at (0.4,-1) {mãe};
+    \node[rotulo,anchor=east] at (0.4,-2.6) {filho};
+  \end{tikzpicture}
+  \end{center}
+
+  \vfill
+  {\large\bfseries\color{tinta} Fellipe Almassy \quad\textperiodcentered\quad Matheus Gomes\par}
+  \vspace{0.2cm}
+  {\color{tinta2} Novembro de 2026\par}
+\end{titlepage}
+\hypersetup{pageanchor=true}
+
+{\setlength{\parskip}{0.05em}\tableofcontents}
+\clearpage
+
+\section{Sobre este projeto}
+\label{sec:sobre}
+
+Somos dois estudantes de matemática aplicada e computação, e decidimos transformar em biblioteca um conteúdo que vimos em aula: o algoritmo genético aplicado à classificação.
+
+\subsection{Por que fizemos do zero}
+
+O objetivo deste projeto não é criar uma superbiblioteca para desbancar o scikit-learn, até porque isso seria impossível. Sentimos a necessidade de entender os modelos com mais profundidade. Usar somente bibliotecas prontas dá um resultado muito imediato, sem exigir muito entendimento, e por isso resolvemos montar uma do zero.
+
+Combinamos uma regra desde o início: usar apenas bibliotecas de base, como o NumPy e o pandas, e fazer todo o resto na mão. A criação da população, o fitness, a seleção, o cruzamento, a mutação e a atualização foram escritos por nós, sem nenhuma biblioteca pronta de aprendizado de máquina ou de algoritmos genéticos.
+
+\subsection{Como o projeto evoluiu}
+
+A primeira versão foi feita 100\% na mão e sem inteligência artificial. Ela funcionava, mas não era escalável. Ao longo de 3 meses, fomos generalizando o código e entendendo melhor o problema, até chegar à biblioteca descrita neste documento.
+
+\subsection{Como usamos inteligência artificial}
+
+Usamos inteligência artificial nesse caminho, principalmente nos detalhes e para melhorar a experiência de uso. Ela nos ajudou a:
+
+\begin{itemize}
+  \item testar erros;
+  \item rodar benchmarks;
+  \item usar funções que não conhecíamos dentro do NumPy e do pandas.
+\end{itemize}
+
+\subsection{Onde usamos o algoritmo}
+
+Todos estes exemplos, e outros que ainda estão por vir, serão disponibilizados na seção de exemplos do \href{https://github.com/FeAlmassy/AlgoritmoGenetico}{repositório no GitHub}.
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{4.2cm}L>{\raggedright\arraybackslash}p{3.4cm}}
+\toprule
+Problema & O que o modelo classifica & Situação\\
+\midrule
+Clientes de um banco & adimplentes ou inadimplentes & usado em projeto; será publicado como notebook didático\\
+Cogumelos & comestíveis ou não comestíveis & usado em projeto\\
+Resultados de exames & normal, anormal ou inconclusivo & em desenvolvimento\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+Por razões de privacidade, não podemos citar o nome do banco.
+
+\subsubsection{O exemplo que estamos preparando: dados de saúde}
+
+Para nós, este é o exemplo mais interessante. Ele usa o \href{https://www.kaggle.com/datasets/prasad22/healthcare-dataset}{Healthcare Dataset}, publicado no Kaggle, que simula registros de internações hospitalares. Cada linha descreve um paciente, com dados como idade, gênero, tipo sanguíneo, condição médica, tipo de admissão, medicamento, plano de saúde e valor cobrado. O objetivo é prever a coluna \emph{Test Results}, o resultado de um exame, que pode ser \emph{Normal}, \emph{Abnormal} ou \emph{Inconclusive}.
+
+Esse problema traz três desafios que os outros exemplos não têm juntos:
+
+\begin{itemize}
+  \item \textbf{Três classes:} usa o modelo ordinal, então será preciso definir uma ordem entre os resultados. Com 3 classes, são 3 ordens diferentes a testar, pois cada ordem e a sua inversa dão o mesmo resultado.
+  \item \textbf{Dados em texto:} a biblioteca só aceita features numéricas, então colunas como condição médica e medicamento precisarão ser convertidas em números.
+  \item \textbf{Dados sintéticos:} a base foi gerada artificialmente, sem nenhum paciente real, o que permite estudar saúde sem expor dados sensíveis. Em contrapartida, pode não haver uma relação real entre as features e o resultado do exame, e descobrir isso faz parte do estudo.
+\end{itemize}
+
+\subsection{De onde veio este documento}
+
+Este documento é uma junção de materiais das aulas que tivemos, de rascunhos e de anotações matemáticas nossas. Todo esse material foi passado para a inteligência artificial, e o resultado foi verificado por nós.
+
+\subsection{Agradecimento especial}
+
+Agradecemos especialmente ao professor Aguinaldo Prandini Ricieri, nosso professor de matemática aplicada, por nos apresentar ao conceito de algoritmo genético, por nos fornecer bases de dados reais e por todas as aulas incríveis que só encontramos no Prandiano.
+
+Segundo o \href{https://www.prandiano.com.br/ricieri}{site do Prandiano}, o professor Ricieri é bacharel em Física pela USP, pós-graduado em Engenharia Espacial pelo ITA, onde se tornou professor em 1982, consultor, autor de vários livros e curador do Museu de Matemática Prandiano. O site também descreve consultorias prestadas a empresas como Petrobras, Vale e Pirelli, que ele leva para a sala de aula como exemplos reais de matemática aplicada.
+
+Temos aula com ele no próprio Museu de Matemática Prandiano, em São Paulo.
+
+\subsection{O que vem a seguir}
+
+O resultado desses 3 meses de dedicação é a nossa primeira biblioteca de aprendizado de máquina. Ainda há melhorias por vir, e feedbacks são muito bem-vindos.
+
+\subsection{Contato}
+
+\begin{tabela}
+\begin{tabular}{llll}
+\toprule
+Nome & LinkedIn & Email & GitHub\\
+\midrule
+Fellipe Almassy & \falta{link do LinkedIn} & \href{mailto:fealmassy@gmail.com}{fealmassy@gmail.com} & \href{https://github.com/FeAlmassy}{FeAlmassy}\\
+Matheus Gomes & \falta{link do LinkedIn} & \href{mailto:matheusgomesabreu2006@gmail.com}{matheusgomesabreu2006@gmail.com} & \href{https://github.com/matheos-hash}{matheos-hash}\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+O código está em \href{https://github.com/FeAlmassy/AlgoritmoGenetico}{github.com/FeAlmassy/AlgoritmoGenetico}.
+
+\clearpage
+% ==================================================================
+\part{Como funciona o algoritmo genético}
+% ==================================================================
+
+\section{Objetivo}
+
+O objetivo do algoritmo genético é encontrar os coeficientes de uma função de decisão que classifique corretamente as lições de uma base de dados, a partir de suas features. Depois do treinamento, essa função pode ser usada para classificar dados novos.
+
+Para cada lição, a função calcula uma nota:
+\[
+  \text{nota} = \text{bias} + \text{gene}_1 \cdot x_1 + \text{gene}_2 \cdot x_2 + \dots + \text{gene}_n \cdot x_n
+\]
+
+No caso de duas classes, a nota define a classe prevista:
+\[
+  \text{nota} \geq 0 \;\Rightarrow\; \text{classe } 1
+  \qquad\qquad
+  \text{nota} < 0 \;\Rightarrow\; \text{classe } 0
+\]
+
+Em vez de calcular esses coeficientes diretamente, o algoritmo os faz evoluir. A Figura~\ref{fig:ciclo} mostra o ciclo completo, e cada etapa é explicada nas próximas seções.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \node[etapa] (criar) at (0,0) {\textbf{Etapa 1}\\criação};
+  \node[etapa] (fit) at (3.3,0) {\textbf{Etapa 2}\\fitness};
+  \node[draw=tinta2,fill=white,diamond,aspect=1.9,inner sep=1pt,line width=0.7pt,align=center,font=\footnotesize] (parou) at (7.3,0) {atingiu\\o critério\\de parada?};
+  \node[etapa,draw=agua,fill=agua!10] (fim) at (12,0) {\textbf{Resultado}\\melhor cromossomo};
+  \node[etapa] (atual) at (3.3,-2.6) {\textbf{Etapa 6}\\atualização};
+  \node[etapa] (mut) at (6.2,-2.6) {\textbf{Etapa 5}\\mutação};
+  \node[etapa] (cruz) at (9.1,-2.6) {\textbf{Etapa 4}\\cruzamento};
+  \node[etapa] (sel) at (12,-2.6) {\textbf{Etapa 3}\\seleção};
+  \draw[seta] (criar) -- (fit);
+  \draw[seta] (fit) -- (parou);
+  \draw[seta] (parou) -- node[rotulo,above] {sim} (fim);
+  \draw[seta] (parou.south) -- ++(0,-0.3) -| node[rotulo,pos=0.25,above] {não} (sel.north);
+  \draw[seta] (sel) -- (cruz);
+  \draw[seta] (cruz) -- (mut);
+  \draw[seta] (mut) -- (atual);
+  \draw[seta] (atual) -- (fit);
+\end{tikzpicture}
+\caption{O ciclo do algoritmo genético. Cada volta é uma geração.}
+\label{fig:ciclo}
+\end{figure}
+
+\subsection{O vocabulário do algoritmo}
+
+O algoritmo se inspira na evolução das espécies e usa os nomes dela:
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{lL}
+\toprule
+Termo & O que significa neste algoritmo\\
+\midrule
+Gene & um coeficiente da função de decisão\\
+Cromossomo & uma solução candidata: o bias e um peso para cada feature\\
+População & o conjunto de cromossomos que existe em um dado momento\\
+Fitness & a nota de um cromossomo: o quanto ele acerta todas as classes\\
+Filho & um cromossomo novo, gerado a partir de dois cromossomos da população\\
+Geração & uma volta completa no ciclo da Figura~\ref{fig:ciclo}\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+\subsection{Por que usar um algoritmo genético}
+
+Métodos baseados em gradiente ajustam os coeficientes seguindo a direção em que a nota melhora, o que exige uma nota que mude suavemente. O fitness deste algoritmo só muda quando alguma lição troca de classe, então uma pequena mudança em um gene pode não alterar nada. Como o algoritmo genético só precisa comparar notas, ele consegue usar esse fitness diretamente.
+
+\clearpage
+\section{Etapa 1: criação da população}
+
+O programa começa criando uma população de cromossomos. Cada cromossomo é um vetor com uma solução candidata, ou seja, um conjunto de coeficientes:
+\begin{align*}
+  C_1 &= [\text{bias},\ \text{gene}_1,\ \text{gene}_2,\ \dots,\ \text{gene}_n]\\
+  C_2 &= [\text{bias},\ \text{gene}_1,\ \text{gene}_2,\ \dots,\ \text{gene}_n]\\
+  &\;\;\vdots\\
+  C_m &= [\text{bias},\ \text{gene}_1,\ \text{gene}_2,\ \dots,\ \text{gene}_n]
+\end{align*}
+
+Cada gene é o peso de uma feature, então um cromossomo tem um gene para cada feature, mais o bias.
+
+O bias é o termo independente da função e desloca a fronteira de decisão. Sem ele, a fronteira passaria sempre pela origem, e uma lição com todas as features iguais a 0 teria sempre nota 0, quaisquer que fossem os pesos. A Figura~\ref{fig:bias} mostra um caso em que ele faz diferença.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.82]
+  \begin{scope}
+    \draw[-{Stealth[length=2mm]},color=tinta2] (0,0) -- (4.6,0) node[right,rotulo] {$x_1$};
+    \draw[-{Stealth[length=2mm]},color=tinta2] (0,0) -- (0,4.2) node[above,rotulo] {$x_2$};
+    \draw[azul,line width=1pt,dashed] (0,0) -- (4.2,3.9);
+    \foreach \p in {(0.7,1.0),(1.1,0.7),(1.3,1.3),(0.8,0.5)} \fill[laranja,draw=white] \p circle (3.2pt);
+    \foreach \p in {(2.7,2.9),(3.2,2.5),(3.4,3.3),(2.6,2.2)} \fill[azul,draw=white] \p circle (3.2pt);
+    \node[font=\small,align=center] at (2.2,-0.75) {sem bias: a reta passa pela\\origem e não separa as classes};
+  \end{scope}
+  \begin{scope}[xshift=7.2cm]
+    \draw[-{Stealth[length=2mm]},color=tinta2] (0,0) -- (4.6,0) node[right,rotulo] {$x_1$};
+    \draw[-{Stealth[length=2mm]},color=tinta2] (0,0) -- (0,4.2) node[above,rotulo] {$x_2$};
+    \draw[azul,line width=1pt] (0,3.8) -- (3.8,0);
+    \foreach \p in {(0.7,1.0),(1.1,0.7),(1.3,1.3),(0.8,0.5)} \fill[laranja,draw=white] \p circle (3.2pt);
+    \foreach \p in {(2.7,2.9),(3.2,2.5),(3.4,3.3),(2.6,2.2)} \fill[azul,draw=white] \p circle (3.2pt);
+    \node[font=\small,align=center] at (2.2,-0.75) {com bias: a reta é deslocada\\e separa as classes};
+  \end{scope}
+  \fill[azul] (5.25,3.1) circle (3.2pt) node[right,font=\small,text=tinta] {classe 1};
+  \fill[laranja] (5.25,2.5) circle (3.2pt) node[right,font=\small,text=tinta] {classe 0};
+\end{tikzpicture}
+\caption{O efeito do bias na fronteira de decisão, em um exemplo com duas features.}
+\label{fig:bias}
+\end{figure}
+
+Todos os valores iniciais, incluindo o bias, são sorteados dentro de um intervalo. O padrão é de $-1$ a $1$, e pode ser alterado via parâmetro.
+
+O resultado desta etapa é uma matriz em que cada linha é um cromossomo e cada coluna é um gene (Figura~\ref{fig:populacao}).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1.15cm,y=0.68cm]
+  \node[rotulo] at (1,0.9) {bias};
+  \node[rotulo] at (2,0.9) {gene$_1$};
+  \node[rotulo] at (3,0.9) {gene$_2$};
+  \node[rotulo] at (4,0.9) {gene$_3$};
+  \node[rotulo] at (5,0.9) {gene$_4$};
+  \foreach \v [count=\i] in {{0,24},{0,73},{$-0{,}68$},{0,98},{$-0{,}83$}} {\celula{\i}{0}{\v}{azul!12}}
+  \foreach \v [count=\i] in {{$-0{,}74$},{0,42},{0,42},{0,22},{0,34}} {\celula{\i}{-1}{\v}{azul!12}}
+  \foreach \v [count=\i] in {{0,61},{$-0{,}15$},{0,87},{$-0{,}42$},{0,09}} {\celula{\i}{-2}{\v}{azul!12}}
+  \foreach \v [count=\i] in {{$-0{,}33$},{0,56},{$-0{,}91$},{0,18},{0,77}} {\celula{\i}{-3}{\v}{azul!12}}
+  \node[rotulo,anchor=east] at (0.45,0) {$C_1$};
+  \node[rotulo,anchor=east] at (0.45,-1) {$C_2$};
+  \node[rotulo,anchor=east] at (0.45,-2) {$C_3$};
+  \node[rotulo,anchor=east] at (0.45,-3) {$C_4$};
+\end{tikzpicture}
+\caption{Uma população de 4 cromossomos para uma base com 4 features.}
+\label{fig:populacao}
+\end{figure}
+
+\subsection{Por que começar ao acaso}
+
+O sorteio espalha a busca por soluções diferentes, sem depender de nenhum palpite inicial. Para ver o ponto de partida, sorteamos 1000 cromossomos para os dados de treino da base \code{dados_binario_1.xlsx}:
+
+\begin{tabela}
+\begin{tabular}{lc}
+\toprule
+Medida & Valor\\
+\midrule
+Fitness médio & 0,171\\
+Melhor fitness & 0,7136\\
+Cromossomos com fitness 0 & 7,7\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Mesmo sem treino, alguns cromossomos já são razoáveis, e a maioria é ruim. As próximas etapas partem dessa variedade.
+
+\subsection{Quantos cromossomos criar}
+
+O tamanho da população é um parâmetro, e o valor padrão da biblioteca é 6. Em nossos testes, com \metodo, ele fez pouca diferença:
+
+\begin{tabela}
+\begin{tabular}{ccc}
+\toprule
+Cromossomos & Melhor fitness no treino (média) & Acurácia no teste (média)\\
+\midrule
+3 & 0,8062 & 81,8\%\\
+6 & 0,8123 & 82,6\%\\
+12 & 0,8151 & 82,4\%\\
+24 & 0,8099 & 83,5\%\\
+48 & 0,8044 & 83,1\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Essas diferenças são pequenas e podem mudar com outras sementes ou bases, então a tabela não aponta um tamanho ideal. Como só um casal se reproduz a cada geração nesta biblioteca, uma população maior também é renovada mais devagar.
+
+\clearpage
+\section{Etapa 2: cálculo do fitness}
+
+Nesta etapa, cada cromossomo recebe uma nota de qualidade, chamada fitness. Um bom cromossomo é aquele que acerta bem as classes da base de dados.
+
+\subsection{Exemplo}
+
+Considere a seguinte base:
+
+\begin{tabela}
+\begin{tabular}{lccccc}
+\toprule
+ & X1 & X2 & X3 & X4 & Classe\\
+\midrule
+Lição 1 & 1 & 0 & 1 & 1 & 1\\
+Lição 2 & 1 & 1 & 0 & 0 & 1\\
+Lição 3 & 1 & 0 & 0 & 1 & 0\\
+Lição 4 & 0 & 1 & 1 & 1 & 0\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+E o seguinte cromossomo, com valores inteiros escolhidos apenas para facilitar as contas (por isso, alguns ficam fora do intervalo padrão de $-1$ a $1$):
+\[ C_1 = [2,\ 3,\ -4,\ 1,\ -1] \]
+
+Aplicando esse cromossomo a cada lição:
+
+\begin{tabela}
+\begin{tabular}{clcccl}
+\toprule
+Lição & Cálculo & Nota & Prevista & Real & Resultado\\
+\midrule
+1 & $2 + 3\cdot1 - 4\cdot0 + 1\cdot1 - 1\cdot1$ & 5 & 1 & 1 & acertou\\
+2 & $2 + 3\cdot1 - 4\cdot1 + 1\cdot0 - 1\cdot0$ & 1 & 1 & 1 & acertou\\
+3 & $2 + 3\cdot1 - 4\cdot0 + 1\cdot0 - 1\cdot1$ & 4 & 1 & 0 & \textbf{errou}\\
+4 & $2 + 3\cdot0 - 4\cdot1 + 1\cdot1 - 1\cdot1$ & $-2$ & 0 & 0 & acertou\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+O cromossomo acertou 3 das 4 lições, uma acurácia de 75\%.
+
+\subsection{Por que não usar a acurácia como nota}
+
+Bases de dados costumam ser desbalanceadas (ter muito mais lições de algumas classes do que de outras), e nesse caso a acurácia pode premiar um cromossomo inútil. Em uma base com 99 lições da classe 1 e apenas 1 da classe 0, um cromossomo que responde sempre ``classe 1'' tem 99\% de acurácia sem ter aprendido a separar as classes.
+
+Por isso, o fitness mede o percentual de acerto dentro de cada classe (o \emph{recall}) e multiplica os resultados:
+\begin{align*}
+  \Pa{0} &= \frac{\text{acertos na classe 0}}{\text{total da classe 0}}
+  \qquad\qquad
+  \Pa{1} = \frac{\text{acertos na classe 1}}{\text{total da classe 1}}\\[0.5em]
+  \text{Fitness} &= \Pa{0} \times \Pa{1}
+\end{align*}
+
+No exemplo anterior:
+\[
+  \Pa{1} = \tfrac{2}{2} = 1{,}0
+  \qquad
+  \Pa{0} = \tfrac{1}{2} = 0{,}5
+  \qquad
+  \text{Fitness} = 1{,}0 \times 0{,}5 = 0{,}5
+\]
+
+A acurácia foi de 0,75, mas o fitness foi de 0,5, porque o cromossomo acertou apenas metade da classe 0.
+
+\subsection{Por que multiplicar em vez de tirar a média}
+
+Voltando à base com 99 lições da classe 1 e 1 da classe 0, o cromossomo que responde sempre ``classe 1'' tem as notas da Figura~\ref{fig:produto}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=7cm,y=0.75cm]
+  \draw[linha] (0,0.6) -- (0,-2.6);
+  \fill[azul] (0,0.17) rectangle (0.99,-0.17);
+  \fill[azul] (0,-0.83) rectangle (0.50,-1.17);
+  \fill[azul] (0,-1.83) rectangle (0.006,-2.17);
+  \node[anchor=east,font=\small,align=right] at (-0.02,0) {Acurácia ($99/100$)};
+  \node[anchor=east,font=\small,align=right] at (-0.02,-1) {Média dos recalls ($(1+0)/2$)};
+  \node[anchor=east,font=\small,align=right] at (-0.02,-2) {Produto dos recalls ($1\times0$)};
+  \node[anchor=west,font=\small\bfseries] at (1.0,0) {0,99};
+  \node[anchor=west,font=\small\bfseries] at (0.51,-1) {0,50};
+  \node[anchor=west,font=\small\bfseries] at (0.02,-2) {0};
+\end{tikzpicture}
+\caption{A nota de um cromossomo que responde sempre ``classe 1'', em três formas de calcular.}
+\label{fig:produto}
+\end{figure}
+
+A média ainda dá uma nota razoável a quem ignorou uma classe inteira. Já o produto zera o fitness, então um cromossomo só recebe nota alta se for bem em todas as classes. Por isso, usamos como nota de cada cromossomo o produto dos percentuais de acerto por classe, ou seja, o produto dos recalls.
+
+\subsection{Generalização para várias classes}
+
+Com $K$ classes, o fitness é o produto dos $K$ recalls:
+\[
+  \text{Fitness} = \Pa{0} \times \Pa{1} \times \dots \times \Pa{K-1}
+\]
+
+Como a nota continua sendo um único número, ela precisa ser dividida em $K$ faixas, uma para cada classe. Essa divisão é feita por $K-1$ pontos de corte em ordem crescente, chamados \emph{thresholds}. Com 5 classes, por exemplo, são 4 cortes (Figura~\ref{fig:thresholds}).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1.9cm]
+  \foreach \a/\b/\c/\t/\k in {-3/-1.5/8/classe 0/0,-1.5/-0.5/22/classe 1/1,-0.5/0.5/38/classe 2/2,0.5/1.5/55/classe 3/3,1.5/3/100/classe 4/4} {
+    \fill[azul!\c,draw=white,line width=1.2pt] (\a,0) rectangle (\b,0.8);
+    \node[font=\small,text=\ifnum\k>3 white\else tinta\fi] at ({(\a+\b)/2},0.4) {\t};
+  }
+  \foreach \x/\t in {-1.5/{$-1{,}5$},-0.5/{$-0{,}5$},0.5/{$0{,}5$},1.5/{$1{,}5$}} {
+    \draw[tinta,line width=0.8pt] (\x,-0.12) -- (\x,0.92);
+    \node[font=\small,below] at (\x,-0.12) {\t};
+  }
+  \draw[-{Stealth[length=2mm]},color=tinta2] (-3,-0.12) -- (3.1,-0.12);
+  \node[rotulo,below] at (3,-0.14) {nota};
+\end{tikzpicture}
+\caption{Os thresholds dividem a nota em uma faixa para cada classe.}
+\label{fig:thresholds}
+\end{figure}
+
+Uma nota igual a um corte fica na faixa de cima, e o caso binário é o caso particular com um único corte em 0.
+
+Como as faixas ficam em sequência na reta, as classes precisam ter uma ordem, da menor para a maior (por exemplo, ruim < médio < bom). Por isso, este modelo é chamado de \emph{ordinal}.
+
+O valor do fitness também tende a cair quando o número de classes aumenta, pois mais fatores menores que 1 são multiplicados. Com 5 classes e 80\% de acerto em cada uma, o fitness é $0{,}8^5 \approx 0{,}33$, embora o modelo acerte 80\% das lições. Por isso, um mesmo valor de fitness não tem o mesmo significado em problemas com números diferentes de classes.
+
+\begin{nota}
+Ao rodar o modelo, é importante olhar tanto o fitness quanto a acurácia: a acurácia é fácil de interpretar, mas pode enganar em bases desbalanceadas, enquanto o fitness mostra se o cromossomo vai bem em todas as classes. Como as duas medidas retornadas pelo treino são calculadas nos próprios dados de treino, o desempenho em dados novos deve ser avaliado em um conjunto de teste, separado com \code{dividir_treino_teste}, como veremos na Parte~II.
+\end{nota}
+
+\subsection{Fitness maior nem sempre significa acurácia maior}
+
+Como as duas medidas avaliam coisas diferentes, elas podem discordar. Em uma base com 90 lições da classe 1 e 10 da classe 0:
+
+\begin{tabela}
+\begin{tabular}{lcccc}
+\toprule
+Cromossomo & Recall da classe 1 & Recall da classe 0 & Fitness & Acurácia\\
+\midrule
+A & 0,9 & 0,5 & 0,45 & 86\%\\
+B & 0,7 & 0,7 & 0,49 & 70\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+O cromossomo B tem o fitness maior porque equilibra melhor as classes, mas A acerta mais lições no total. O algoritmo prefere B, e qual deles é melhor depende do que importa no problema.
+
+\subsection{Como ler o valor do fitness}
+
+O fitness vai de 0 a 1, e o valor depende do número de classes. A tabela mostra o fitness de modelos com o mesmo recall em todas as classes:
+
+\begin{tabela}
+\begin{tabular}{cccc}
+\toprule
+Classes & Recall de 90\% & Recall de 80\% & Recall de 70\%\\
+\midrule
+2 & 0,81 & 0,64 & 0,49\\
+3 & 0,73 & 0,51 & 0,34\\
+5 & 0,59 & 0,33 & 0,17\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\subsection{O fitness em dados reais}
+
+Estes são os resultados no conjunto de teste das duas bases de exemplo, que aparecem na Parte~II:
+
+\begin{tabela}
+\begin{tabular}{lcccc}
+\toprule
+Base & Classes & Recall por classe & Fitness & Acurácia\\
+\midrule
+\code{dados_binario_1.xlsx} & 2 & 85\%, 79\% & 0,6648 & 81,5\%\\
+\code{dados_multiclasse.xlsx} & 5 & 46\%, 100\%, 75\%, 75\%, 92\% & 0,2380 & 75,0\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+A acurácia das duas bases é parecida, mas o fitness é bem menor na base com 5 classes, tanto pelo número de fatores quanto pelo recall de 46\% em uma delas.
+
+\clearpage
+\section{Etapa 3: seleção dos pais}
+
+Depois que todos os cromossomos recebem um fitness, o algoritmo escolhe quais deles vão se reproduzir. A ideia vem da seleção natural: os indivíduos mais adaptados têm mais chance de passar seus genes adiante.
+
+Essa escolha é um sorteio, não uma simples escolha dos melhores. Um cromossomo com fitness alto tem mais chance de ser selecionado, mas nada garante que ele será escolhido. Um dos métodos mais usados para fazer esse sorteio é a roleta.
+
+\subsection{Como funciona a roleta}
+
+Imagine uma roleta em que cada cromossomo ocupa uma fatia. Quanto maior o fitness, maior a fatia e maior a chance de a roleta parar nela. A chance de cada cromossomo é a sua parte no fitness total da população:
+\[
+  \text{chance do cromossomo} = \frac{\text{fitness do cromossomo}}{\text{soma dos fitnesses da população}}
+\]
+
+\subsection{Exemplo}
+
+Considere uma população de 4 cromossomos, cuja soma dos fitnesses é 0,80:
+
+\begin{tabela}
+\begin{tabular}{lcccl}
+\toprule
+Cromossomo & Fitness & Cálculo & Chance & Faixa do sorteio\\
+\midrule
+$C_1$ & 0,40 & 0,40 / 0,80 & 50\% & de 0 a 50\\
+$C_2$ & 0,24 & 0,24 / 0,80 & 30\% & de 50 a 80\\
+$C_3$ & 0,12 & 0,12 / 0,80 & 15\% & de 80 a 95\\
+$C_4$ & 0,04 & 0,04 / 0,80 & 5\% & de 95 a 100\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Para girar a roleta, sorteamos um número entre 0 e 100. Cada cromossomo fica com uma faixa do tamanho da sua chance, e é selecionado quando o número cai nela (Figura~\ref{fig:roleta}). Como são necessários dois pais, a roleta é girada duas vezes:
+\begin{itemize}
+  \item 1º giro: saiu 62, que cai na faixa de $C_2$, então $C_2$ é o pai.
+  \item 2º giro: saiu 31, que cai na faixa de $C_1$, então $C_1$ é a mãe.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  % roleta
+  \begin{scope}[xshift=0cm]
+    \def\r{1.75}
+    \foreach \ini/\fim/\cor/\t/\ang in {90/-90/azul/{$C_1$ 50\%}/0,-90/-198/laranja/{$C_2$ 30\%}/-144,-198/-252/agua/{$C_3$ 15\%}/-225,-252/-270/amarelo/{}/-261} {
+      \fill[\cor,draw=white,line width=1.5pt] (0,0) -- (\ini:\r) arc (\ini:\fim:\r) -- cycle;
+    }
+    \node[font=\footnotesize,text=white] at (0:1.0) {$C_1$\,50\%};
+    \node[font=\footnotesize,text=white] at (-144:1.05) {$C_2$\,30\%};
+    \node[font=\footnotesize,text=white] at (-225:1.15) {$C_3$};
+    \node[font=\footnotesize,text=tinta,anchor=south] at (99:1.8) {$C_4$\,5\%};
+    \node[font=\footnotesize,text=tinta,anchor=east] at (-225:1.85) {15\%};
+  \end{scope}
+  % faixa
+  \begin{scope}[xshift=3.1cm,yshift=-0.35cm,x=0.1cm]
+    \fill[azul,draw=white,line width=1.2pt] (0,0) rectangle (50,0.7);
+    \fill[laranja,draw=white,line width=1.2pt] (50,0) rectangle (80,0.7);
+    \fill[agua,draw=white,line width=1.2pt] (80,0) rectangle (95,0.7);
+    \fill[amarelo,draw=white,line width=1.2pt] (95,0) rectangle (100,0.7);
+    \node[font=\small,text=white] at (25,0.35) {$C_1$};
+    \node[font=\small,text=white] at (65,0.35) {$C_2$};
+    \node[font=\small,text=white] at (87.5,0.35) {$C_3$};
+    \foreach \x in {0,50,80,95,100} \node[font=\footnotesize,below,text=tinta2] at (\x,0) {\x};
+    \node[font=\footnotesize,above,text=tinta] at (97.5,0.7) {$C_4$};
+    \draw[-{Stealth[length=2mm]},line width=0.8pt,tinta] (62,1.5) -- (62,0.75);
+    \node[font=\footnotesize,above,align=center] at (62,1.5) {1º giro: 62};
+    \draw[-{Stealth[length=2mm]},line width=0.8pt,tinta] (31,1.5) -- (31,0.75);
+    \node[font=\footnotesize,above,align=center] at (31,1.5) {2º giro: 31};
+  \end{scope}
+\end{tikzpicture}
+\caption{A mesma roleta vista como círculo e como faixa de 0 a 100.}
+\label{fig:roleta}
+\end{figure}
+
+Como os giros são independentes, o mesmo cromossomo pode ser sorteado duas vezes. Nesse caso, ele é pai e mãe ao mesmo tempo, e os filhos saem iguais a ele antes da mutação.
+
+\subsection{Por que não escolher sempre os melhores}
+
+Pode parecer mais eficiente cruzar sempre os dois melhores cromossomos, mas isso faria a população perder diversidade rapidamente. Os cromossomos ficariam cada vez mais parecidos, e o algoritmo poderia ficar preso em uma solução apenas razoável, sem explorar outras possibilidades.
+
+Um cromossomo com fitness baixo também pode ter genes úteis, que só mostram seu valor quando combinados com os genes de outro cromossomo. A roleta mantém essa possibilidade aberta. No exemplo, $C_4$ tem só 5\% de chance por giro, mas ainda pode ser escolhido.
+
+\subsection{Por que não sortear com chances iguais}
+
+No outro extremo, se todos tivessem a mesma chance, o fitness não influenciaria a reprodução. Os genes bons não seriam favorecidos, e a busca perderia a direção, parecendo mais uma tentativa ao acaso.
+
+A roleta fica entre esses dois extremos:
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{lLL}
+\toprule
+Forma de escolher & Vantagem & Problema\\
+\midrule
+Sempre os melhores & Favorece os bons genes & Perde diversidade\\
+Chances iguais & Mantém a diversidade & Não favorece os bons genes\\
+Roleta & Favorece os bons genes e mantém a diversidade & Continua dependendo do acaso\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+Com o pai e a mãe escolhidos, o algoritmo passa para a próxima etapa: o cruzamento, em que os genes dos dois são combinados para formar os filhos.
+
+\subsection{A chance real de cada cromossomo}
+
+Como a roleta gira duas vezes, a chance de um cromossomo ser escolhido ao menos uma vez em uma geração é maior que a chance por giro:
+\[
+  \text{chance em dois giros} = 1 - (1 - \text{chance por giro})^2
+\]
+
+\begin{tabela}
+\begin{tabular}{lcc}
+\toprule
+Cromossomo & Chance por giro & Chance de ser escolhido em dois giros\\
+\midrule
+$C_1$ & 50\% & 75,0\%\\
+$C_2$ & 30\% & 51,0\%\\
+$C_3$ & 15\% & 27,8\%\\
+$C_4$ & 5\% & 9,8\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Já a chance de o mesmo cromossomo ser sorteado nos dois giros é a soma das chances ao quadrado:
+\[
+  0{,}50^2 + 0{,}30^2 + 0{,}15^2 + 0{,}05^2 = 0{,}365
+\]
+
+Nessa população, isso acontece em 36,5\% das gerações. Por isso, a mutação é importante mesmo quando o casal é formado por um único cromossomo.
+
+\clearpage
+\section{Etapa 4: cruzamento}
+
+No cruzamento, os genes do pai e da mãe são combinados para formar novos cromossomos, os filhos. A ideia é que dois cromossomos razoáveis podem ter acertado partes diferentes do problema, e um filho pode herdar o que cada um tem de melhor.
+
+\subsection{Como funciona o corte em um ponto}
+
+Um dos métodos mais simples é o cruzamento de um ponto:
+\begin{enumerate}
+  \item Sorteamos um ponto de corte entre dois genes.
+  \item O filho recebe os genes do pai até o corte.
+  \item Depois do corte, ele recebe os genes da mãe.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1.15cm,y=0.72cm]
+  \foreach \v [count=\i] in {1,2,{$-2$},{$-1$},{$-2$}} {\celula{\i}{0}{\v}{azul!18}}
+  \foreach \v [count=\i] in {0,1,1,2,{$-4$}} {\celula{\i}{-1}{\v}{laranja!18}}
+  \foreach \v/\c [count=\i] in {1/azul!18,2/azul!18,{$-2$}/azul!18,2/laranja!18,{$-4$}/laranja!18} {\celula{\i}{-2.6}{\v}{\c}}
+  \node[rotulo,anchor=east] at (0.45,0) {Pai};
+  \node[rotulo,anchor=east] at (0.45,-1) {Mãe};
+  \node[rotulo,anchor=east] at (0.45,-2.6) {Filho};
+  \draw[tinta,line width=1pt,dashed] (3.5,0.65) -- (3.5,-3.2);
+  \node[rotulo,above] at (3.5,0.65) {ponto de corte};
+\end{tikzpicture}
+\caption{O filho herda o começo do pai e o final da mãe.}
+\label{fig:cruzamento}
+\end{figure}
+
+O corte fica sempre entre dois genes, nunca antes do primeiro ou depois do último. Assim, o filho sempre herda genes dos dois pais, em vez de ser uma cópia de apenas um deles. Um cromossomo com $n$ genes tem $n-1$ pontos de corte possíveis.
+
+Cada filho tem seu próprio corte sorteado. Por isso, um mesmo casal pode gerar filhos diferentes.
+
+\subsection{Exemplo}
+
+Vamos usar a mesma base da Etapa 2:
+
+\begin{tabela}
+\begin{tabular}{lccccc}
+\toprule
+ & X1 & X2 & X3 & X4 & Classe\\
+\midrule
+Lição 1 & 1 & 0 & 1 & 1 & 1\\
+Lição 2 & 1 & 1 & 0 & 0 & 1\\
+Lição 3 & 1 & 0 & 0 & 1 & 0\\
+Lição 4 & 0 & 1 & 1 & 1 & 0\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Os dois pais têm o mesmo fitness, mas erram lições diferentes:
+
+\begin{tabela}
+\begin{tabular}{llcc}
+\toprule
+Cromossomo & Genes & Lição que erra & Fitness\\
+\midrule
+Pai & $[1,\ 2,\ -2,\ -1,\ -2]$ & Lição 3 & 0,5\\
+Mãe & $[0,\ 1,\ 1,\ 2,\ -4]$ & Lição 1 & 0,5\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Com 5 genes, existem 4 pontos de corte possíveis. Estes são os filhos que cada um deles geraria:
+
+\begin{tabela}
+\begin{tabular}{llcc}
+\toprule
+Corte depois do & Filho & Lição que erra & Fitness\\
+\midrule
+1º gene & $[1,\ 1,\ 1,\ 2,\ -4]$ & Lição 4 & 0,5\\
+2º gene & $[1,\ 2,\ 1,\ 2,\ -4]$ & Lição 4 & 0,5\\
+3º gene & $[1,\ 2,\ -2,\ 2,\ -4]$ & nenhuma & \textbf{1,0}\\
+4º gene & $[1,\ 2,\ -2,\ -1,\ -4]$ & Lição 1 & 0,5\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Veja como o filho do corte depois do 3º gene se sai em cada lição:
+
+\begin{tabela}
+\begin{tabular}{clcccl}
+\toprule
+Lição & Cálculo & Nota & Prevista & Real & Resultado\\
+\midrule
+1 & $1 + 2\cdot1 - 2\cdot0 + 2\cdot1 - 4\cdot1$ & 1 & 1 & 1 & acertou\\
+2 & $1 + 2\cdot1 - 2\cdot1 + 2\cdot0 - 4\cdot0$ & 1 & 1 & 1 & acertou\\
+3 & $1 + 2\cdot1 - 2\cdot0 + 2\cdot0 - 4\cdot1$ & $-1$ & 0 & 0 & acertou\\
+4 & $1 + 2\cdot0 - 2\cdot1 + 2\cdot1 - 4\cdot1$ & $-3$ & 0 & 0 & acertou\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Nenhum dos pais acertava todas as lições, mas essa combinação acerta, e o fitness sobe de 0,5 para 1,0.
+
+\subsection{Por que o cruzamento funciona}
+
+O cruzamento aproveita soluções que já foram testadas. Um gene isolado não é bom nem ruim, porque a nota depende da soma de todos os genes. Por isso, a mesma parte de um cromossomo pode funcionar bem ou mal dependendo dos genes que a acompanham, e cruzar é uma forma de testar novas combinações.
+
+Isso não garante um filho melhor. No exemplo, três dos quatro filhos possíveis ficaram com o mesmo fitness dos pais, e em outros casos um filho pode até ficar pior. O cruzamento só aumenta as chances de encontrar boas combinações, e são as próximas etapas que decidem o que permanece na população.
+
+\subsection{O limite do cruzamento}
+
+O cruzamento só reorganiza valores que já existem nos pais, sem criar nenhum valor novo. No exemplo, o primeiro gene de qualquer filho sempre será 1, porque o corte nunca acontece antes dele e o filho sempre começa com os genes do pai. Se um valor necessário não estiver em nenhum dos dois pais, o cruzamento não consegue produzi-lo.
+
+É esse limite que a próxima etapa resolve: a mutação, que introduz valores novos nos filhos.
+
+\subsection{Quantos filhos gerar}
+
+A quantidade de filhos por geração é um parâmetro, e o valor padrão da biblioteca é 3. Em nossos testes, com \metodo, ela fez pouca diferença:
+
+\begin{tabela}
+\begin{tabular}{ccc}
+\toprule
+Filhos & Melhor fitness no treino (média) & Acurácia no teste (média)\\
+\midrule
+2 & 0,8155 & 84,3\%\\
+3 & 0,8123 & 82,6\%\\
+6 & 0,8149 & 83,2\%\\
+12 & 0,8137 & 83,4\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\subsection{Outras formas de cruzar}
+
+O corte em um ponto é o método usado nesta biblioteca, mas não é o único:
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{lL}
+\toprule
+Método & Como funciona\\
+\midrule
+Um ponto & o filho pega o começo de um dos pais e o final do outro\\
+Dois pontos & o filho pega o trecho entre dois cortes de um dos pais, e o resto do outro\\
+Uniforme & cada gene do filho é sorteado, vindo do pai ou da mãe\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+\subsection{Quantos cortes existem em bases reais}
+
+Cada ponto de corte tem a mesma chance de ser sorteado, então a chance de um corte específico é de $1/(n-1)$, em que $n$ é o número de genes:
+
+\begin{tabela}
+\begin{tabular}{lccc}
+\toprule
+Base & Genes & Pontos de corte & Chance de cada corte\\
+\midrule
+Exemplo deste documento & 5 & 4 & 25\%\\
+\code{dados_binario_1.xlsx} & 19 & 18 & 5,6\%\\
+\code{dados_multiclasse.xlsx} & 31 & 30 & 3,3\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\subsection{Um cruzamento em dados reais}
+
+No notebook \code{exemplo_binario.ipynb}, a primeira geração escolheu pais com fitness de 0,1498 e 0,0827. Depois do cruzamento e da mutação, os três filhos ficaram com fitness de 0,4515, 0,1933 e 0,2531, todos acima dos dois pais.
+
+Em uma única geração, o melhor fitness da população subiu de 0,2204 para 0,4515. Esse salto é comum no início, quando os cromossomos ainda são ruins, e fica mais raro com o tempo, como mostra a Figura~\ref{fig:evolucao}.
+
+\clearpage
+\section{Etapa 5: mutação}
+
+Na mutação, alguns genes de cada filho são trocados por valores novos, sorteados ao acaso. Assim como na natureza, essa mudança não tem direção: ela pode ajudar, atrapalhar ou não fazer diferença.
+
+Sem a mutação, o algoritmo só poderia recombinar os valores que já existem na população. A mutação é o que traz valores novos para a busca.
+
+\subsection{Como funciona a mutação}
+
+Para cada filho gerado no cruzamento:
+\begin{enumerate}
+  \item Sorteamos quais genes serão alterados. A quantidade é definida por um parâmetro.
+  \item Trocamos cada gene sorteado por um novo valor aleatório entre $-1$ e $1$.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1.15cm,y=1.05cm]
+  \foreach \v [count=\i] in {1,1,1,2,{$-4$}} {\celula{\i}{0}{\v}{fundo}}
+  \foreach \v/\c [count=\i] in {1/fundo,1/fundo,{0,5}/agua!35,2/fundo,{$-4$}/fundo} {\celula{\i}{-1}{\v}{\c}}
+  \node[rotulo,anchor=east] at (0.45,0) {Antes};
+  \node[rotulo,anchor=east] at (0.45,-1) {Depois};
+  \draw[seta] (3,-0.32) -- (3,-0.68);
+  \node[rotulo,anchor=west] at (5.6,-1) {o 3º gene foi sorteado};
+\end{tikzpicture}
+\caption{Uma mutação troca o valor do gene sorteado por um valor novo.}
+\label{fig:mutacao}
+\end{figure}
+
+O novo valor não depende do anterior. O gene é substituído, e não ajustado aos poucos.
+
+\subsection{Exemplo}
+
+Vamos usar novamente a base da Etapa 2:
+
+\begin{tabela}
+\begin{tabular}{lccccc}
+\toprule
+ & X1 & X2 & X3 & X4 & Classe\\
+\midrule
+Lição 1 & 1 & 0 & 1 & 1 & 1\\
+Lição 2 & 1 & 1 & 0 & 0 & 1\\
+Lição 3 & 1 & 0 & 0 & 1 & 0\\
+Lição 4 & 0 & 1 & 1 & 1 & 0\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Na Etapa 4, o filho $[1,\ 1,\ 1,\ 2,\ -4]$ errou a Lição 4 e ficou com fitness 0,5. Veja três mutações possíveis nesse filho, cada uma com um efeito diferente (nesta tabela, os genes são separados por ponto e vírgula, porque 0,5 é um único valor):
+
+\begin{tabela}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lllcl}
+\toprule
+Gene alterado & Cromossomo após a mutação & Lições que erra & Fitness & Efeito\\
+\midrule
+3º gene: de 1 para 0,5 & $[1;\ 1;\ 0{,}5;\ 2;\ -4]$ & nenhuma & \textbf{1,0} & melhorou\\
+1º gene: de 1 para $-1$ & $[-1;\ 1;\ 1;\ 2;\ -4]$ & Lição 1 & 0,5 & manteve o fitness\\
+5º gene: de $-4$ para 1 & $[1;\ 1;\ 1;\ 2;\ 1]$ & Lições 3 e 4 & 0 & piorou\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Veja como o cromossomo que melhorou se sai em cada lição:
+
+\begin{tabela}
+\begin{tabular}{clcccl}
+\toprule
+Lição & Cálculo & Nota & Prevista & Real & Resultado\\
+\midrule
+1 & $1 + 1\cdot1 + 0{,}5\cdot0 + 2\cdot1 - 4\cdot1$ & 0 & 1 & 1 & acertou\\
+2 & $1 + 1\cdot1 + 0{,}5\cdot1 + 2\cdot0 - 4\cdot0$ & 2,5 & 1 & 1 & acertou\\
+3 & $1 + 1\cdot1 + 0{,}5\cdot0 + 2\cdot0 - 4\cdot1$ & $-2$ & 0 & 0 & acertou\\
+4 & $1 + 1\cdot0 + 0{,}5\cdot1 + 2\cdot1 - 4\cdot1$ & $-0{,}5$ & 0 & 0 & acertou\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+O valor 0,5 não existia em nenhum dos pais, então o cruzamento nunca chegaria a esse cromossomo. Foi a mutação que tornou essa solução possível.
+
+\subsection{Por que a mutação é necessária}
+
+\begin{itemize}
+  \item \textbf{Traz valores novos:} o cruzamento só combina o que já existe. A mutação alcança valores que nenhum cromossomo da população tinha.
+  \item \textbf{Recupera o que se perdeu:} um valor útil pode desaparecer quando os cromossomos que o carregam saem da população. A mutação é uma forma de voltar a testar valores diferentes.
+  \item \textbf{Ajuda a sair de soluções apenas razoáveis:} quando os cromossomos ficam parecidos, cruzá-los gera filhos quase iguais aos pais. A mutação os empurra para outras regiões da busca.
+\end{itemize}
+
+\subsection{Quanto mutar}
+
+A quantidade de genes alterados em cada filho é um parâmetro definido por quem usa o algoritmo, e o valor padrão da biblioteca é 1. O efeito desse valor depende do tamanho do cromossomo, que tem um gene para cada feature da base, mais o bias. Por isso, o que importa é a proporção de genes alterados:
+
+\begin{tabela}
+\begin{tabular}{lccc}
+\toprule
+Base & Features & Genes & Proporção com 1 gene mutado\\
+\midrule
+Exemplo deste documento & 4 & 5 & 20\%\\
+\code{dados_binario_1.xlsx} & 18 & 19 & 5,3\%\\
+\code{dados_multiclasse.xlsx} & 30 & 31 & 3,2\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Mutar 1 gene muda bastante um cromossomo de 5 genes, mas bem menos um de 31. Assim, um valor adequado para uma base pode ser pouco ou demais para outra.
+
+Essa proporção equilibra aproveitar o que já foi encontrado e explorar coisas novas:
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{lLL}
+\toprule
+Quantidade de mutação & Vantagem & Problema\\
+\midrule
+Nenhuma & Preserva tudo o que foi herdado & A busca fica limitada aos valores que já existem\\
+Pouca & Testa novidades sem perder o que foi herdado & A busca pode ser mais lenta\\
+Muita & Explora bastante & Destrói o que foi herdado, e a busca se aproxima de tentativas ao acaso\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+Testamos isso com \metodo. Os cromossomos da base têm 19 genes:
+
+\begin{tabela}
+\begin{tabular}{cccc}
+\toprule
+Genes mutados & Proporção & Melhor fitness no treino (média) & Acurácia no teste (média)\\
+\midrule
+0 & 0\% & 0,4637 & 64,8\%\\
+1 & 5,3\% & 0,8123 & 82,6\%\\
+2 & 10,5\% & 0,8105 & 83,6\%\\
+4 & 21,1\% & 0,7875 & 81,3\%\\
+8 & 42,1\% & 0,7703 & 81,3\%\\
+19 & 100\% & 0,6755 & 77,4\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Sem mutação, a busca fica muito limitada. Com todos os genes mutados, os filhos não herdam nada dos pais, e o resultado também piora. Nesta base, os melhores valores ficaram em 1 ou 2 genes.
+
+\subsection{Por que a mutação não estraga o algoritmo}
+
+Como a mutação é aleatória, muitos filhos podem piorar, como no terceiro caso do exemplo. Isso não é um problema, porque nem todo filho entra na população. Quem decide é a próxima etapa, a atualização, que escolhe quais filhos ficam e quais cromossomos saem.
+
+\subsection{Outras formas de mutar}
+
+Nesta biblioteca, o gene é trocado por um valor novo. Essa não é a única forma de fazer mutação:
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{lL}
+\toprule
+Método & Como funciona\\
+\midrule
+Substituição & o gene recebe um valor novo, sem relação com o anterior\\
+Perturbação & o gene recebe um pequeno ajuste, somado ao valor que já tinha\\
+Por probabilidade & cada gene tem uma chance de mudar, então a quantidade varia a cada filho\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+\begin{nota}
+Na biblioteca, a mutação sempre sorteia valores entre $-1$ e $1$, mesmo quando a população inicial usa outro intervalo. Os parâmetros \code{minimo} e \code{maximo} valem só para a criação da população.
+\end{nota}
+
+\clearpage
+\section{Etapa 6: atualização da população}
+
+Na atualização, o algoritmo decide quem continua na população para a próxima geração. Os piores cromossomos saem, e os melhores filhos entram no lugar deles. O tamanho da população não muda. Essa é a etapa que encerra o ciclo base do programa.
+
+\subsection{Como funciona a atualização}
+
+\begin{enumerate}
+  \item Calculamos o fitness de cada filho já mutado.
+  \item Ordenamos a população e os filhos pelo fitness.
+  \item Retiramos os piores cromossomos da população.
+  \item Colocamos os melhores filhos nesses lugares.
+\end{enumerate}
+
+A quantidade de cromossomos trocados é um parâmetro. Ela não pode ser maior que o tamanho da população nem que a quantidade de filhos.
+
+\subsection{Exemplo}
+
+Vamos usar a população da Etapa 3, supondo que o casal tenha gerado 3 filhos e que 2 cromossomos serão trocados. Os dois piores da população são $C_3$ e $C_4$, e os dois melhores filhos são $F_1$ e $F_2$. O filho $F_3$ é descartado (Figura~\ref{fig:atualizacao}).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[y=0.72cm,
+  ind/.style={draw=white,line width=1.2pt,minimum width=2.5cm,minimum height=0.6cm,inner sep=0pt,font=\small,text=tinta}]
+  \node[font=\small\bfseries] at (0,0.85) {População};
+  \node[ind,fill=azul!18] (c1) at (0,0) {$C_1$ \; 0,40};
+  \node[ind,fill=azul!18] (c2) at (0,-1) {$C_2$ \; 0,24};
+  \node[ind,fill=linha!70] (c3) at (0,-2) {$C_3$ \; 0,12 \; (sai)};
+  \node[ind,fill=linha!70] (c4) at (0,-3) {$C_4$ \; 0,04 \; (sai)};
+  \node[font=\small\bfseries] at (4.2,0.85) {Filhos};
+  \node[ind,fill=agua!30] (f1) at (4.2,0) {$F_1$ \; 0,50};
+  \node[ind,fill=agua!30] (f2) at (4.2,-1) {$F_2$ \; 0,30};
+  \node[ind,fill=linha!70] (f3) at (4.2,-2) {$F_3$ \; 0,02 \; (descartado)};
+  \node[font=\small\bfseries] at (10.2,0.85) {Nova população};
+  \node[ind,fill=agua!30] (n1) at (10.2,0) {$F_1$ \; 0,50};
+  \node[ind,fill=azul!18] (n2) at (10.2,-1) {$C_1$ \; 0,40};
+  \node[ind,fill=agua!30] (n3) at (10.2,-2) {$F_2$ \; 0,30};
+  \node[ind,fill=azul!18] (n4) at (10.2,-3) {$C_2$ \; 0,24};
+  \draw[seta] (5.75,-1) -- node[rotulo,above] {melhores} node[rotulo,below] {ficam} (8.65,-1);
+  \node[rotulo] at (0,-3.9) {média 0,20};
+  \node[rotulo] at (10.2,-3.9) {média 0,36};
+\end{tikzpicture}
+\caption{Os piores da população saem, e os melhores filhos entram.}
+\label{fig:atualizacao}
+\end{figure}
+
+O melhor fitness subiu de 0,40 para 0,50, e a média da população subiu de 0,20 para 0,36.
+
+\subsection{Quando os filhos são piores}
+
+Os melhores filhos entram mesmo que sejam piores que os cromossomos que saem. Imagine que os filhos tivessem fitness de 0,10, 0,05 e 0,02:
+
+\begin{tabela}
+\begin{tabular}{cc}
+\toprule
+Antes & Depois\\
+\midrule
+0,40 & 0,40\\
+0,24 & 0,24\\
+0,12 & 0,10\\
+0,04 & 0,05\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+$C_3$ (0,12) foi trocado por um filho pior, e a média caiu de 0,20 para 0,1975. Isso não é um problema, porque os melhores cromossomos continuam na população, e a entrada de filhos mantém a variedade da busca.
+
+\subsection{Por que preservar os melhores}
+
+Trocar apenas os piores mantém as melhores soluções na população. Essa estratégia é chamada de \emph{elitismo}, e impede que uma boa solução se perca por causa do acaso na seleção, no cruzamento ou na mutação.
+
+Além disso, o algoritmo guarda uma cópia do melhor cromossomo encontrado até o momento. Assim, o resultado final nunca é perdido, mesmo que esse cromossomo saia da população em algum momento.
+
+\subsection{Quantos cromossomos trocar}
+
+Assim como na mutação, o que importa é a proporção. Os valores padrão da biblioteca são uma população de 6, com 3 filhos e 2 trocas por geração, ou seja, cerca de 33\% da população:
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{lLL}
+\toprule
+Quantidade de trocas & Vantagem & Problema\\
+\midrule
+Nenhuma & Preserva toda a população & Os filhos não entram, e o algoritmo não evolui\\
+Poucas & Preserva as boas soluções & A população muda mais devagar\\
+Muitas & Renova bastante a população & Boas soluções podem sair da população\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+Testamos isso com uma população de 6 cromossomos e 6 filhos, mantendo os demais valores padrão, em 10 sementes, 500 gerações e fitness alvo de 1,0:
+
+\begin{tabela}
+\begin{tabular}{ccc}
+\toprule
+Trocas por geração & Melhor fitness no treino (média) & Acurácia no teste (média)\\
+\midrule
+0 & 0,3481 & 60,8\%\\
+1 & 0,8177 & 82,8\%\\
+2 & 0,8149 & 83,2\%\\
+3 & 0,8192 & 83,2\%\\
+6 & 0,7204 & 78,2\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Sem trocas, o algoritmo fica só com o melhor cromossomo da população inicial. Com 6 trocas, toda a população é substituída a cada geração, e o resultado também piora.
+
+\subsection{O fim do ciclo}
+
+Com a população atualizada, termina uma geração. O algoritmo volta para a Etapa 2 e repete o ciclo:
+\[
+  \text{fitness} \to \text{seleção} \to \text{cruzamento} \to \text{mutação} \to \text{atualização} \to \text{fitness} \to \dots
+\]
+
+O ciclo termina quando uma destas condições é atingida:
+\begin{itemize}
+  \item \textbf{Fitness alvo:} o melhor cromossomo chegou ao valor definido como suficiente.
+  \item \textbf{Limite de gerações:} a quantidade máxima de gerações foi alcançada.
+\end{itemize}
+
+A Figura~\ref{fig:evolucao} mostra essa evolução em um treino real, feito com a base \code{dados_binario_1.xlsx}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=14cm,height=7cm,
+  xmin=0,xmax=500,ymin=0,ymax=1,
+  xlabel={Geração},ylabel={Fitness},
+  xlabel style={font=\small,color=tinta2},ylabel style={font=\small,color=tinta2},
+  ticklabel style={font=\small,color=tinta2},
+  /pgf/number format/use comma,
+  ytick={0,0.2,0.4,0.6,0.8,1},
+  yticklabel style={/pgf/number format/fixed,/pgf/number format/precision=1,/pgf/number format/fixed zerofill},
+  grid=major,grid style={color=linha,line width=0.3pt},
+  axis line style={color=linha},tick style={color=linha},
+  axis lines=left,
+  legend style={font=\small,draw=none,fill=white,at={(0.98,0.05)},anchor=south east,legend columns=1},
+  legend cell align=left,
+]
+\addplot[color=laranja,line width=0.7pt,opacity=0.85] table[col sep=comma,x=geracao,y=medio] {evolucao_treino.csv};
+\addlegendentry{fitness médio da população}
+\addplot[color=azul,line width=1.4pt,const plot] table[col sep=comma,x=geracao,y=melhor] {evolucao_treino.csv};
+\addlegendentry{melhor fitness encontrado}
+\addplot[color=tinta2,line width=0.7pt,dashed,forget plot] coordinates {(0,0.9) (500,0.9)};
+\node[font=\footnotesize,text=tinta2,anchor=south east] at (axis cs:498,0.9) {fitness alvo: 0,90};
+\node[font=\footnotesize,text=tinta,anchor=north east] at (axis cs:498,0.77) {melhor: 0,8068};
+\end{axis}
+\end{tikzpicture}
+\caption{Evolução do fitness em 500 gerações. O alvo de 0,90 não foi atingido, então o treino parou no limite de gerações.}
+\label{fig:evolucao}
+\end{figure}
+
+O resultado do treinamento é o melhor cromossomo encontrado em toda a execução, e é ele que será usado para classificar dados novos. O algoritmo genético não garante que essa seja a melhor solução possível, e sim a melhor que encontrou durante a busca. Por isso, execuções com sementes diferentes podem chegar a resultados diferentes.
+
+\subsection{Quantas gerações rodar}
+
+Mais gerações ajudam, mas o ganho diminui com o tempo. Com os valores padrão, fitness alvo de 1,0 e 10 sementes:
+
+\begin{tabela}
+\begin{tabular}{ccc}
+\toprule
+Gerações & Melhor fitness no treino (média) & Acurácia no teste (média)\\
+\midrule
+50 & 0,7216 & 77,4\%\\
+100 & 0,7607 & 80,2\%\\
+500 & 0,8123 & 82,6\%\\
+2000 & 0,8180 & 83,3\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\subsection{O efeito da semente}
+
+Como o algoritmo depende de sorteios, cada semente leva a um resultado diferente. Estes são 5 treinos com os mesmos dados e parâmetros, com 500 gerações:
+
+\begin{tabela}
+\begin{tabular}{cccc}
+\toprule
+Semente & Fitness no treino & Acurácia no treino & Acurácia no teste\\
+\midrule
+0 & 0,8068 & 89,8\% & 81,5\%\\
+1 & 0,8195 & 90,5\% & 82,4\%\\
+2 & 0,8027 & 89,6\% & 83,3\%\\
+3 & 0,8279 & 91,0\% & 83,3\%\\
+4 & 0,8237 & 90,7\% & 80,6\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+O maior fitness no treino não garantiu a maior acurácia no teste. A semente 2 teve o menor fitness e empatou na maior acurácia no teste. Por isso, vale testar mais de uma semente e sempre avaliar o resultado no conjunto de teste.
+
+\clearpage
+% ==================================================================
+\part{Como usar a biblioteca}
+% ==================================================================
+
+\section{Os quatro passos}
+
+O uso da biblioteca tem sempre quatro passos:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[passo/.style={etapa,text width=3cm,minimum height=1.25cm}]
+  \node[passo] (a) at (0,0) {\textbf{1) Carregar}\\ler o arquivo e separar treino e teste};
+  \node[passo] (b) at (3.95,0) {\textbf{2) Treinar}\\encontrar o melhor cromossomo};
+  \node[passo] (c) at (7.9,0) {\textbf{3) Prever}\\classificar os dados de teste};
+  \node[passo] (d) at (11.85,0) {\textbf{4) Avaliar}\\comparar com as classes reais};
+  \draw[seta] (a) -- (b); \draw[seta] (b) -- (c); \draw[seta] (c) -- (d);
+\end{tikzpicture}
+\caption{Os quatro passos de uso da biblioteca.}
+\label{fig:passos}
+\end{figure}
+
+\begin{enumerate}
+  \item \textbf{Carregar os dados:} ler o arquivo e separar treino e teste.
+  \item \textbf{Treinar:} encontrar o melhor cromossomo usando os dados de treino.
+  \item \textbf{Prever:} usar esse cromossomo para classificar os dados de teste.
+  \item \textbf{Avaliar:} comparar as previsões com as classes reais.
+\end{enumerate}
+
+O código completo cabe em poucas linhas, e cada parte é explicada a seguir:
+
+\begin{py}
+from algoritmo_genetico import ler_excel, dividir_treino_teste, treinar, prever, avaliar
+
+# 1) Carregar os dados
+X, y = ler_excel("dados_binario_1.xlsx")
+X_treino, X_teste, y_treino, y_teste = dividir_treino_teste(X, y, seed=0)
+
+# 2) Treinar
+modelo = treinar(X_treino, y_treino, geracoes=500, fitness_alvo=0.90, seed=0)
+
+# 3) Prever
+previsoes = prever(modelo, X_teste)
+
+# 4) Avaliar
+resultado = avaliar(y_teste, previsoes)
+\end{py}
+
+Depois desses passos, o modelo pode ser usado para \hyperref[sec:novos]{classificar dados novos}.
+
+\section{Instalação}
+
+A biblioteca requer Python 3.10 ou superior.
+
+\begin{py}
+pip install algoritmo-genetico
+\end{py}
+
+\clearpage
+\section{O que entra e o que sai de cada função}
+
+A saída de uma função é a entrada da seguinte (Figura~\ref{fig:fluxo}).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \node[funcao] (ler) at (0.2,0) {ler\_excel};
+  \node[dado] (xy) at (3.4,0) {X, y};
+  \node[funcao] (div) at (7,0) {dividir\_treino\_teste};
+  \node[dado] (dt) at (1.2,-1.6) {X\_treino, y\_treino};
+  \node[dado] (dx) at (7,-1.6) {X\_teste};
+  \node[dado] (dy) at (12,-1.6) {y\_teste};
+  \node[funcao] (tre) at (1.2,-3.1) {treinar};
+  \node[funcao] (pre) at (7,-3.1) {prever};
+  \node[funcao] (ava) at (12,-3.1) {avaliar};
+  \node[dado] (res) at (12,-4.6) {resultado};
+  \draw[seta] (ler) -- (xy);
+  \draw[seta] (xy) -- (div);
+  \draw[seta] (div.south) -- ++(0,-0.3) -| (dt.north);
+  \draw[seta] (div.south) -- (dx.north);
+  \draw[seta] (div.south) -- ++(0,-0.3) -| (dy.north);
+  \draw[seta] (dt) -- (tre);
+  \draw[seta] (dx) -- (pre);
+  \draw[seta] (dy) -- (ava);
+  \draw[seta] (tre) -- node[dado,fill=white,draw=none,above=1pt] {modelo} (pre);
+  \draw[seta] (pre) -- node[dado,fill=white,draw=none,above=1pt] {previsoes} (ava);
+  \draw[seta] (ava) -- (res);
+\end{tikzpicture}
+\caption{Como os dados passam de uma função para a outra. Funções em retângulos, dados em cápsulas.}
+\label{fig:fluxo}
+\end{figure}
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.7cm}>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}p{3cm}L}
+\toprule
+Função & Recebe & Retorna & Para que serve a saída\\
+\midrule
+\code{ler_excel} / \code{ler_csv} & caminho do arquivo & \code{X, y} & entram no \code{dividir_treino_teste}\\
+\code{ler_excel} / \code{ler_csv} com \code{tem_classe=False} & caminho do arquivo & \code{X} & entra no \code{prever}\\
+\code{dividir_treino_teste} & \code{X, y} & \code{X_treino, X_teste, y_treino, y_teste} & \code{X_treino} e \code{y_treino} entram no \code{treinar}, \code{X_teste} entra no \code{prever}, e \code{y_teste} entra no \code{avaliar}\\
+\code{treinar} & \code{X_treino, y_treino} & \code{modelo} (dicionário) & entra no \code{prever}\\
+\code{prever} & \code{modelo, X_teste} & \code{previsoes} (array) & entram no \code{avaliar}\\
+\code{avaliar} & \code{y_teste, previsoes} & \code{resultado} (dicionário) & fim do processo: mostra como o modelo se saiu\\
+\code{matriz_confusao} & \code{y_teste, previsoes} & \code{matriz} (array) & opcional: só a matriz, sem o resto da avaliação\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+Dois cuidados com a ordem:
+\begin{itemize}
+  \item O \code{prever} recebe primeiro o \code{modelo} e depois as features.
+  \item O \code{avaliar} recebe primeiro as classes reais e depois as previstas.
+\end{itemize}
+
+\clearpage
+\section{1) Carregar os dados}
+
+\subsection{Formato do arquivo}
+
+O arquivo, em \code{.xlsx} ou \code{.csv}, deve seguir este layout:
+
+\begin{tabela}
+\begin{tabular}{lccccc}
+\toprule
+Lições & X1 & X2 & \dots & Xn & CLASS\\
+\midrule
+Y001 & 1 & 0 & \dots & 1 & 1\\
+Y002 & 0 & 1 & \dots & 0 & 0\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\begin{itemize}
+  \item \textbf{Primeira coluna:} identifica a lição e é ignorada.
+  \item \textbf{Colunas do meio:} são as features. Precisam ser números, sem células vazias.
+  \item \textbf{Última coluna:} é a classe.
+\end{itemize}
+
+\subsection{Ler o arquivo}
+
+\begin{py}
+X, y = ler_excel("dados_binario_1.xlsx")
+\end{py}
+
+Para arquivos \code{.csv}, use \code{ler_csv} da mesma forma.
+
+\textbf{O que retorna:} dois arrays, sempre nesta ordem.
+
+\begin{tabela}
+\begin{tabular}{lll}
+\toprule
+Variável & O que é & Formato no exemplo\\
+\midrule
+\code{X} & features de todas as lições & 539 linhas e 18 colunas\\
+\code{y} & classe de cada lição & 539 valores\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\subsection{Separar treino e teste}
+
+\begin{py}
+X_treino, X_teste, y_treino, y_teste = dividir_treino_teste(X, y, seed=0)
+\end{py}
+
+O modelo aprende com o treino, e o teste fica guardado para verificar se ele acerta lições que nunca viu. Por padrão, 80\% das lições vão para o treino, e a proporção de cada classe é mantida nos dois conjuntos. O parâmetro \code{seed} faz a divisão sair igual em toda execução.
+
+\textbf{O que retorna:} quatro arrays, sempre nesta ordem.
+
+\begin{tabela}
+\begin{tabular}{clll}
+\toprule
+Posição & Variável & O que é & Formato no exemplo\\
+\midrule
+1º & \code{X_treino} & features do treino & 431 linhas e 18 colunas\\
+2º & \code{X_teste} & features do teste & 108 linhas e 18 colunas\\
+3º & \code{y_treino} & classes do treino & 431 valores\\
+4º & \code{y_teste} & classes do teste & 108 valores\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\begin{nota}
+A ordem é primeiro os dois \code{X}, depois os dois \code{y}, com treino antes de teste em cada par. A função devolve os arrays por posição, então os nomes das variáveis à esquerda precisam seguir essa ordem. Copie a linha acima exatamente como está.
+\end{nota}
+
+\clearpage
+\section{2) Treinar}
+
+\begin{py}
+modelo = treinar(X_treino, y_treino, geracoes=500, fitness_alvo=0.90, seed=0)
+\end{py}
+
+O \code{treinar} executa o algoritmo genético e recebe apenas os dados de treino. O treino para quando o melhor cromossomo atinge o \code{fitness_alvo} ou quando acabam as gerações.
+
+A cada geração, ele mostra o progresso na tela. Esta é a última linha do exemplo:
+
+\begin{saida}
+Geração  500 | melhor fitness: 0.8068 | acurácia: 89.79%
+\end{saida}
+
+Para treinar sem essas mensagens, use \code{verbose=False}.
+
+\textbf{O que retorna:} um único dicionário, aqui chamado de \code{modelo}. Cada informação é acessada pelo nome:
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{lLl}
+\toprule
+Chave & O que é & Valor no exemplo\\
+\midrule
+\code{modelo["cromossomo"]} & genes do melhor cromossomo: o bias e um peso para cada feature & array com 19 valores\\
+\code{modelo["fitness"]} & fitness desse cromossomo no treino & 0,8068\\
+\code{modelo["acuracia"]} & acurácia desse cromossomo no treino & 0,8979\\
+\code{modelo["geracao"]} & geração em que o treino parou & 500\\
+\code{modelo["thresholds"]} & pontos de corte usados & \code{None} (duas classes)\\
+\code{modelo["historico"]} & evolução do treino, em três listas & 500 valores em cada lista\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+As três listas do histórico são acessadas assim:
+
+\begin{py}
+modelo["historico"]["melhor"]    # melhor fitness até cada geração
+modelo["historico"]["medio"]     # fitness médio da população em cada geração
+modelo["historico"]["acuracia"]  # acurácia do melhor cromossomo até cada geração
+\end{py}
+
+\clearpage
+\section{3) Prever}
+
+\begin{py}
+previsoes = prever(modelo, X_teste)
+\end{py}
+
+O \code{prever} recebe o dicionário gerado no treino e as features das lições a classificar. As classes reais não são passadas, porque é isso que o modelo precisa descobrir.
+
+\textbf{O que retorna:} um array com a classe prevista para cada lição, na mesma ordem das linhas recebidas. No exemplo, são 108 valores, cada um 0 ou 1.
+
+\subsection{O que acontece por dentro}
+
+Depois do treino, o algoritmo genético não roda mais. O modelo é só o melhor cromossomo, e prever é fazer a mesma conta da Etapa 2 com ele.
+
+Imagine um modelo treinado para dizer se um cliente é adimplente (classe 1) ou inadimplente (classe 0), com 4 features, nesta ordem:
+
+\begin{tabela}
+\begin{tabular}{ll}
+\toprule
+Feature & Significado\\
+\midrule
+X1 & tem renda alta?\\
+X2 & tem emprego fixo?\\
+X3 & já atrasou um pagamento?\\
+X4 & tem outra dívida?\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Supondo que o melhor cromossomo seja $[1,\ 2,\ 1,\ -3,\ -1]$:
+
+\begin{tabela}
+\begin{tabular}{clccl}
+\toprule
+Cliente & Cálculo & Nota & Classe & Resultado\\
+\midrule
+$[1,\ 1,\ 0,\ 1]$ & $1 + 2\cdot1 + 1\cdot1 - 3\cdot0 - 1\cdot1$ & 3 & 1 & adimplente\\
+$[0,\ 1,\ 1,\ 1]$ & $1 + 2\cdot0 + 1\cdot1 - 3\cdot1 - 1\cdot1$ & $-2$ & 0 & inadimplente\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+A resposta é uma previsão com base nos padrões da base de treino, não uma certeza. O significado de cada classe vem dos dados usados no treino.
+
+\subsection{Quantas lições o prever aceita}
+
+\begin{tabela}
+\begin{tabular}{lll}
+\toprule
+O que recebe & Formato & O que retorna\\
+\midrule
+Várias lições & matriz com uma lição por linha & array com uma classe por lição\\
+Uma lição & vetor com um valor por feature & array com uma única classe\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\clearpage
+\section{4) Avaliar}
+
+Agora comparamos as previsões com as classes reais do teste, que o modelo não viu durante o treino.
+
+\begin{py}
+resultado = avaliar(y_teste, previsoes)
+\end{py}
+
+Passe primeiro as classes reais e depois as previstas. A função mostra este resumo na tela:
+
+\begin{saida}
+acurácia: 81.48%
+fitness: 0.6648
+
+recall por classe:
+  0: 44/52 = 84.62%
+  1: 44/56 = 78.57%
+
+matriz de confusão:
+real \ previu   0   1
+            0  44   8
+            1  12  44
+\end{saida}
+
+Cada parte responde a uma pergunta:
+
+\begin{itemize}
+  \item \textbf{Acurácia:} de todas as lições, quantas o modelo acertou?
+  \item \textbf{Fitness:} o modelo foi bem em todas as classes? É o produto dos recalls.
+  \item \textbf{Recall por classe:} das lições de cada classe, quantas ele acertou?
+  \item \textbf{Matriz de confusão:} com o que ele confundiu cada classe? Cada linha é a classe real, cada coluna é a classe prevista, e a diagonal mostra os acertos (Figura~\ref{fig:confusao}).
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \def\w{1.25}
+  \cmcell{0}{0}{44}{44}{\w}\cmcell{1}{0}{8}{44}{\w}
+  \cmcell{0}{1}{12}{44}{\w}\cmcell{1}{1}{44}{44}{\w}
+  \node[font=\small] at (0*\w,0.95) {0}; \node[font=\small] at (1*\w,0.95) {1};
+  \node[font=\small] at (-0.95,0) {0}; \node[font=\small] at (-0.95,-1*\w) {1};
+  \node[rotulo] at (0.5*\w,1.4) {classe prevista};
+  \node[rotulo,rotate=90] at (-1.4,-0.5*\w) {classe real};
+  \node[align=left,font=\small,anchor=west,text width=7.5cm] at (2.4,-0.5*\w) {
+    Das 52 lições da classe 0, o modelo acertou 44 e errou 8.\\[0.4em]
+    Das 56 lições da classe 1, acertou 44 e errou 12.\\[0.4em]
+    Quanto mais escura a célula, mais lições caíram nela. Em um bom modelo, os valores se concentram na diagonal.};
+\end{tikzpicture}
+\caption{A matriz de confusão do exemplo com duas classes.}
+\label{fig:confusao}
+\end{figure}
+
+No exemplo, a acurácia foi de 89,79\% no treino e 81,48\% no teste. É comum o resultado no teste ser menor, e é ele que indica como o modelo deve se sair com dados novos.
+
+\textbf{O que retorna:} um dicionário com os mesmos valores. Para receber apenas o dicionário, sem mostrar o resumo, use \code{verbose=False}.
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{lLl}
+\toprule
+Chave & O que é & Valor no exemplo\\
+\midrule
+\code{resultado["acuracia"]} & fração de lições que o modelo acertou & 0,8148\\
+\code{resultado["fitness"]} & produto dos recalls & 0,6648\\
+\code{resultado["recall"]} & array com o recall de cada classe, da classe 0 em diante & $[0{,}8462;\ 0{,}7857]$\\
+\code{resultado["matriz"]} & array com a matriz de confusão & $[[44,\ 8],\ [12,\ 44]]$\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+Se uma classe não aparecer nos dados avaliados, o recall dela não pode ser calculado. Nesse caso, o resumo mostra ``sem amostras'', e o recall dessa classe e o fitness ficam como \code{nan}.
+
+Para ver somente a matriz de confusão, importe e use \code{matriz_confusao(y_teste, previsoes)}.
+
+\subsection{De onde vêm as medidas}
+
+As medidas saem diretamente da matriz de confusão. Com os valores deste exemplo:
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{lLc}
+\toprule
+Medida & Como calcular & Valor\\
+\midrule
+Acurácia & soma da diagonal dividida pelo total: $(44+44)/108$ & 0,8148\\
+Recall da classe 0 & acertos dividido pela linha da classe: $44/52$ & 0,8462\\
+Recall da classe 1 & acertos dividido pela linha da classe: $44/56$ & 0,7857\\
+Fitness & produto dos recalls: $0{,}8462 \times 0{,}7857$ & 0,6648\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+Para usar um valor depois, acesse o dicionário pelo nome:
+
+\begin{py}
+print(resultado["acuracia"])   # 0.8148148148148148
+print(resultado["matriz"][1, 0])   # classe 1 prevista como classe 0: 12
+\end{py}
+
+\clearpage
+\section{Classificar dados novos}
+\label{sec:novos}
+
+Depois de treinar e avaliar o modelo, ele pode ser usado com dados que ainda não têm classe, como clientes novos. Como não há classe real para comparar, o \code{avaliar} não se aplica aqui. A qualidade esperada do modelo é a que foi medida no teste.
+
+\subsection{Vários clientes de uma planilha}
+
+O arquivo segue o mesmo layout, mas sem a coluna de classe:
+
+\begin{tabela}
+\begin{tabular}{lcccc}
+\toprule
+Cliente & X1 & X2 & \dots & Xn\\
+\midrule
+Ana & 1 & 0 & \dots & 1\\
+Bruno & 0 & 1 & \dots & 0\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+As features precisam estar na mesma ordem do treino. A biblioteca confere a quantidade de colunas, mas não a ordem, então uma troca de colunas gera previsões erradas sem aviso.
+
+Use \code{tem_classe=False} para avisar que o arquivo não tem a coluna de classe:
+
+\begin{py}
+X_novo = ler_excel("clientes_novos.xlsx", tem_classe=False)
+previsoes = prever(modelo, X_novo)
+\end{py}
+
+\textbf{O que retorna:} com \code{tem_classe=False}, o \code{ler_excel} devolve só o \code{X}, e não \code{X, y}. O \code{prever} devolve um array com a classe de cada linha, na mesma ordem do arquivo.
+
+As features não podem ter células vazias. Se tiverem, o \code{prever} mostra um erro em vez de classificar.
+
+Para gerar uma planilha com a classe de cada cliente, use o pandas, que é instalado junto com a biblioteca:
+
+\begin{py}
+import pandas as pd
+
+df = pd.read_excel("clientes_novos.xlsx")
+df["CLASSE_PREVISTA"] = previsoes
+df.to_excel("clientes_classificados.xlsx", index=False)
+\end{py}
+
+\subsection{Um único cliente}
+
+Os dados também podem ser escritos diretamente, com um valor para cada feature, na mesma ordem do treino. O exemplo abaixo supõe um modelo treinado com 4 features:
+
+\begin{py}
+import numpy as np
+
+cliente = np.array([1, 0, 0, 1])
+classe = prever(modelo, cliente)[0]
+\end{py}
+
+O resultado do \code{prever} continua sendo um array, agora com um único valor, então usamos \code{[0]} para obter a classe.
+
+\subsection{Guardar o modelo}
+
+O \code{modelo} só existe enquanto o programa está aberto. Para usá-lo depois sem treinar de novo, salve o dicionário com o \code{pickle}, do próprio Python:
+
+\begin{py}
+import pickle
+
+# depois de treinar
+with open("modelo.pkl", "wb") as f:
+    pickle.dump(modelo, f)
+
+# em outra execução
+with open("modelo.pkl", "rb") as f:
+    modelo = pickle.load(f)
+\end{py}
+
+\begin{nota}
+Só carregue arquivos \code{.pkl} de fontes confiáveis, porque abrir um pode executar código.
+\end{nota}
+
+\subsection{O caminho completo}
+
+Juntando tudo, um programa treina e guarda o modelo, e outro o carrega para classificar dados novos:
+
+\begin{py}
+import pickle
+from algoritmo_genetico import ler_excel, dividir_treino_teste, treinar, prever, avaliar
+
+# treinar, avaliar e guardar
+X, y = ler_excel("dados_binario_1.xlsx")
+X_treino, X_teste, y_treino, y_teste = dividir_treino_teste(X, y, seed=0)
+modelo = treinar(X_treino, y_treino, geracoes=500, seed=0, verbose=False)
+resultado = avaliar(y_teste, prever(modelo, X_teste))
+
+with open("modelo.pkl", "wb") as f:
+    pickle.dump(modelo, f)
+
+# em outra execução: carregar e classificar
+with open("modelo.pkl", "rb") as f:
+    modelo = pickle.load(f)
+
+X_novo = ler_excel("clientes_novos.xlsx", tem_classe=False)
+previsoes = prever(modelo, X_novo)
+\end{py}
+
+\clearpage
+\section{Com mais de duas classes}
+
+Os quatro passos são os mesmos, e o modelo passa a ser ordinal. Só mudam os passos 1 e 2, e o passo 4 ganha uma opção.
+
+\textbf{No passo 1,} as classes precisam ser números de 0 a $K-1$, da menor para a maior. Se estiverem em texto, converta-as depois de ler o arquivo. A ordem abaixo foi encontrada pelo notebook multiclasse testando as combinações, e não é uma ordem conhecida:
+
+\begin{py}
+import numpy as np
+
+X, y_letras = ler_excel("dados_multiclasse.xlsx")
+
+ordem = ["P", "D", "G", "M", "S"]
+y = np.array([ordem.index(letra) for letra in y_letras])
+
+X_treino, X_teste, y_treino, y_teste = dividir_treino_teste(X, y, seed=0)
+\end{py}
+
+\textbf{No passo 2,} passe $K-1$ thresholds em ordem crescente. Com 5 classes, são 4 cortes:
+
+\begin{py}
+thresholds = np.array([-1.5, -0.5, 0.5, 1.5])
+
+modelo = treinar(X_treino, y_treino, thresholds=thresholds,
+                 geracoes=2000, fitness_alvo=1.0, seed=0)
+\end{py}
+
+\textbf{O passo 3 não muda:}
+
+\begin{py}
+previsoes = prever(modelo, X_teste)
+\end{py}
+
+\textbf{No passo 4,} \code{nomes_classes} troca os números pelos nomes no resumo:
+
+\begin{py}
+resultado = avaliar(y_teste, previsoes, nomes_classes=ordem)
+\end{py}
+
+\begin{saida}
+acurácia: 75.00%
+fitness: 0.2380
+
+recall por classe:
+  P: 6/13 = 46.15%
+  D: 7/7 = 100.00%
+  G: 9/12 = 75.00%
+  M: 6/8 = 75.00%
+  S: 11/12 = 91.67%
+\end{saida}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \def\w{0.82}
+  \foreach \lin/\linha in {0/{6,3,4,0,0},1/{0,7,0,0,0},2/{0,1,9,2,0},3/{0,0,0,6,2},4/{0,1,0,0,11}} {
+    \foreach \v [count=\c from 0] in \linha {\cmcell{\c}{\lin}{\v}{11}{\w}}
+  }
+  \foreach \n [count=\i from 0] in {P,D,G,M,S} {
+    \node[font=\small] at (\i*\w,0.68) {\n};
+    \node[font=\small] at (-0.68,-\i*\w) {\n};
+  }
+  \node[rotulo] at (2*\w,1.1) {classe prevista};
+  \node[rotulo,rotate=90] at (-1.1,-2*\w) {classe real};
+\end{tikzpicture}
+\caption{A matriz de confusão do exemplo com 5 classes.}
+\label{fig:confusao5}
+\end{figure}
+
+A acurácia de 75\% esconde uma diferença entre as classes: o modelo acerta todas as lições de D, mas menos da metade das de P. O recall por classe mostra isso.
+
+O \code{prever} devolve números. Para classificar dados novos e obter os nomes das classes, converta o resultado:
+
+\begin{py}
+nomes = [ordem[classe] for classe in prever(modelo, X_novo)]
+\end{py}
+
+\subsection{Como escolher os thresholds}
+
+Os thresholds são definidos por quem usa a biblioteca e ficam fixos durante o treino. Quem se adapta são os genes, que precisam gerar notas dentro das faixas certas. Por isso, cortes igualmente espaçados, como os do exemplo, são um bom ponto de partida.
+
+\subsection{Como escolher a ordem das classes}
+
+Quando a ordem real das classes é conhecida, basta usá-la. Quando não é, o notebook do exemplo multiclasse testa as combinações possíveis. Com 5 classes, são 120 ordens, mas uma ordem e a sua inversa dão o mesmo resultado, então bastam 60:
+
+\begin{tabela}
+\begin{tabular}{lc}
+\toprule
+Ordem testada & Fitness médio no treino\\
+\midrule
+$\mathrm{P} < \mathrm{D} < \mathrm{G} < \mathrm{M} < \mathrm{S}$ (a melhor) & 0,3737\\
+$\mathrm{D} < \mathrm{P} < \mathrm{G} < \mathrm{M} < \mathrm{S}$ (a segunda melhor) & 0,3678\\
+$\mathrm{G} < \mathrm{P} < \mathrm{S} < \mathrm{D} < \mathrm{M}$ (a pior) & 0,0518\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+As melhores ordens ficam com fitness parecido, e a vencedora pode mudar com outras sementes. Já a diferença para as piores é grande. A escolha usa só os dados de treino, para o teste continuar sendo inédito para o modelo.
+
+\clearpage
+\section{Parâmetros do \texorpdfstring{\code{treinar}}{treinar}}
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{llL}
+\toprule
+Parâmetro & Padrão & Descrição\\
+\midrule
+\code{X} & obrigatório & matriz com as features\\
+\code{y} & obrigatório & vetor com a classe de cada lição\\
+\code{qtd_cromossomos} & \code{6} & tamanho da população\\
+\code{qtd_genes_mutados} & \code{1} & quantos genes mudam em cada filho\\
+\code{qtd_filhos} & \code{3} & quantos filhos são gerados por geração\\
+\code{qtd_substituicoes} & \code{2} & quantos piores cromossomos são trocados pelos melhores filhos\\
+\code{geracoes} & \code{100} & número máximo de gerações\\
+\code{fitness_alvo} & \code{0.90} & fitness em que o treino para\\
+\code{thresholds} & \code{None} & \code{None} para duas classes, ou $K-1$ cortes para $K$ classes\\
+\code{minimo} & \code{-1.0} & menor valor dos genes na população inicial\\
+\code{maximo} & \code{1.0} & maior valor dos genes na população inicial\\
+\code{seed} & \code{None} & semente para repetir o mesmo resultado\\
+\code{verbose} & \code{True} & mostra o progresso a cada geração\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+\begin{itemize}
+  \item \code{qtd_substituicoes} não pode ser maior que \code{qtd_cromossomos} nem que \code{qtd_filhos}.
+  \item \code{qtd_genes_mutados} não pode ser maior que a quantidade de genes, que é a de features mais o bias.
+  \item \code{minimo} e \code{maximo} valem só para a população inicial. A mutação sempre sorteia valores entre $-1$ e $1$.
+\end{itemize}
+
+\subsection{Por onde começar a ajustar}
+
+Nos testes das etapas anteriores, com a base \code{dados_binario_1.xlsx}, os parâmetros que mais mudaram o resultado foram estes:
+
+\begin{itemize}
+  \item \textbf{\code{geracoes}:} a média do melhor fitness subiu de 0,72 com 50 gerações para 0,81 com 500.
+  \item \textbf{\code{qtd_genes_mutados}:} os melhores resultados vieram com 1 ou 2 genes, e valores altos pioraram o fitness.
+  \item \textbf{\code{qtd_substituicoes}:} trocar nenhum cromossomo ou a população inteira piorou o resultado.
+\end{itemize}
+
+Já \code{qtd_cromossomos} e \code{qtd_filhos} fizeram pouca diferença nesses testes. Esses resultados valem para essa base e podem mudar em outras.
+
+\clearpage
+\section{Usando cada etapa separadamente}
+
+As etapas do algoritmo também podem ser chamadas uma a uma, para estudar ou testar cada parte. O notebook \code{exemplo_binario.ipynb} mostra essa sequência passo a passo, com as saídas de cada etapa. Elas ficam em módulos próprios:
+
+\begin{py}
+from algoritmo_genetico.criacao import criar_cromossomos
+from algoritmo_genetico.fitness import fitness_binario, fitness_ordinal, fitness_percentual
+from algoritmo_genetico.selecao import selecionar_pais_roleta
+from algoritmo_genetico.cruzamento import cruzar_um_ponto
+from algoritmo_genetico.mutacao import mutar
+from algoritmo_genetico.atualizacao import atualizar_populacao
+\end{py}
+
+Uma geração completa é esta sequência, em que cada linha usa o que as anteriores produziram:
+
+\begin{py}
+populacao = criar_cromossomos(qtd_cromossomos=6, qtd_genes=X.shape[1] + 1)
+fitnesses = fitness_binario(populacao, X, y)
+percentuais = fitness_percentual(fitnesses)
+pai, mae = selecionar_pais_roleta(populacao, percentuais)
+filhos = cruzar_um_ponto(pai, mae, qtd_filhos=3)
+filhos = mutar(filhos, qtd_genes_mutados=1)
+fitnesses_filhos = fitness_binario(filhos, X, y)
+populacao = atualizar_populacao(populacao, fitnesses, filhos, fitnesses_filhos,
+                                qtd_substituicoes=2)
+\end{py}
+
+A nova \code{populacao} volta para o cálculo do fitness, e o ciclo recomeça. Os formatos abaixo usam o exemplo de 18 features, com uma população de 6 cromossomos e 3 filhos:
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{4.15cm}>{\raggedright\arraybackslash}p{3.8cm}L>{\raggedright\arraybackslash}p{1.9cm}}
+\toprule
+Função & Recebe & Retorna & Formato no exemplo\\
+\midrule
+\code{criar_cromossomos} & quantidade de cromossomos e de genes & \code{populacao}: matriz em que cada linha é um cromossomo & 6 linhas e 19 colunas\\
+\code{fitness_binario} & \code{populacao, X, y} & \code{fitnesses}: fitness de cada cromossomo & 6 valores\\
+\code{fitness_ordinal} & \code{populacao, X, y, thresholds} & fitness de cada cromossomo, para várias classes & um valor por cromossomo\\
+\code{fitness_percentual} & \code{fitnesses} & \code{percentuais}: chance de cada cromossomo na roleta & 6 valores que somam 1\\
+\code{selecionar_pais_roleta} & \code{populacao, percentuais} & \code{pai, mae}: dois cromossomos & 19 valores cada\\
+\code{cruzar_um_ponto} & \code{pai, mae}, quantidade de filhos & \code{filhos}: matriz em que cada linha é um filho & 3 linhas e 19 colunas\\
+\code{mutar} & \code{filhos}, quantidade de genes mutados & \code{filhos} mutados, sem alterar o array original & 3 linhas e 19 colunas\\
+\code{atualizar_populacao} & \code{populacao, fitnesses, filhos, fitnesses_filhos}, quantidade de trocas & nova \code{populacao} & 6 linhas e 19 colunas\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+Na linha de \code{fitnesses_filhos}, a mesma função \code{fitness_binario} calcula o fitness dos filhos, com 3 valores no exemplo. No caso com várias classes, use \code{fitness_ordinal} nas duas chamadas.
+
+
+\clearpage
+\section{Erros comuns}
+
+As funções verificam o que recebem e explicam o problema na mensagem de erro. Estas são as situações mais comuns:
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{4.4cm}L>{\raggedright\arraybackslash}p{4.2cm}}
+\toprule
+Situação & Mensagem & O que fazer\\
+\midrule
+Célula vazia nas features & \emph{X tem células vazias ou valores inválidos (NaN ou infinito), corrija esses dados antes de continuar} & preencher ou remover as células\\
+Classes em texto, com thresholds & \emph{y deve conter inteiros de 0 a K-1, classes em texto precisam ser convertidas antes de treinar} & converter as classes para números\\
+Classes diferentes de 0 e 1, sem thresholds & \emph{y deve conter apenas 0 e 1, encontrou [0 1 2]} & passar \code{thresholds} para usar várias classes\\
+Thresholds a menos para as classes & \emph{y deve conter inteiros entre 0 e 1, encontrou [0 1 2]} & passar $K-1$ cortes\\
+Thresholds a mais para as classes & \emph{y deve ter pelo menos uma amostra de cada classe. Classes sem amostras: [3]} & passar $K-1$ cortes\\
+Planilha sem classe lida sem \code{tem_classe=False} & \emph{X tem 17 features, mas o cromossomo foi treinado com 18 features} & usar \code{tem_classe=False}\\
+Mais trocas que filhos & \emph{qtd\_substituicoes deve estar entre 0 e 1 (menor valor entre qtd\_cromossomos e qtd\_filhos), recebeu 2} & reduzir as trocas ou aumentar os filhos\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+\begin{nota}
+Se as colunas estiverem fora da ordem do treino, nenhum erro aparece, porque a biblioteca só confere a quantidade de colunas. Essa verificação fica por conta de quem usa.
+\end{nota}
+
+Encontrou um erro que não está aqui, ou tem uma sugestão? Abra uma issue no \href{https://github.com/FeAlmassy/AlgoritmoGenetico/issues}{repositório do projeto} ou fale com a gente pelos contatos da seção \hyperref[sec:sobre]{Sobre este projeto}.
+
+\end{document}

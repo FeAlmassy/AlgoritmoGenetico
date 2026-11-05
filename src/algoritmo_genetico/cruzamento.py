@@ -1,5 +1,5 @@
 # ordem: 4ª etapa, vem depois de selecao.py -> próxima: mutacao.py
-"""Cruzamento (crossover) entre pai e mãe."""
+"""Cruzamento entre pai e mãe."""
 
 import numpy as np
 
@@ -23,6 +23,9 @@ def cruzar_um_ponto(pai: np.ndarray, mae: np.ndarray, qtd_filhos: int = 3) -> np
 
     if len(pai) != len(mae):
         raise ValueError("pai e mae devem ter o mesmo número de genes")
+
+    if len(pai) < 2:
+        raise ValueError(f"pai e mae precisam de pelo menos 2 genes para ter um ponto de corte, recebeu {len(pai)}")
 
     if qtd_filhos <= 0:
         raise ValueError(f"qtd_filhos deve ser no mínimo 1, recebeu {qtd_filhos}")

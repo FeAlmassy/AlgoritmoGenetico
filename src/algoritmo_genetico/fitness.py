@@ -96,7 +96,7 @@ def fitness_ordinal(cromossomos: np.ndarray, X: np.ndarray,
         raise ValueError(f"X tem {X.shape[0]} amostras, mas y tem {y.shape[0]}")
 
     if len(thresholds) == 0:
-        raise ValueError("thresholds nao pode ser vazio (precisa de pelo menos 1 ponto de corte)")
+        raise ValueError("thresholds não pode ser vazio (precisa de pelo menos 1 ponto de corte)")
 
     #claudio ajudou nessa aqui
     if not np.all(np.diff(thresholds) > 0):
@@ -104,7 +104,16 @@ def fitness_ordinal(cromossomos: np.ndarray, X: np.ndarray,
 
     K = len(thresholds) + 1
 
+    if y.dtype.kind in "USO" and any(isinstance(valor, str) for valor in y):
+        raise TypeError("y deve conter inteiros de 0 a K-1, classes em texto precisam ser convertidas antes de treinar")
+
     valores_unicos = np.unique(y)
+
+    # valor quebrado ou vazio (NaN) não pertence a nenhuma classe e seria ignorado sem aviso
+    valores_float = valores_unicos.astype(float)
+    if not np.all(valores_float == np.floor(valores_float)):
+        raise ValueError(f"y deve conter inteiros entre 0 e {K - 1}, encontrou {valores_unicos}")
+
     if valores_unicos.min() < 0 or valores_unicos.max() >= K:
         raise ValueError(f"y deve conter inteiros entre 0 e {K - 1}, encontrou {valores_unicos}")
 

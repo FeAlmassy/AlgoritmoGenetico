@@ -97,14 +97,15 @@ pip install -e .                   # modo editável: mudanças no código valem 
 ### Binário
 
 ```python
-from algoritmo_genetico import rodar, prever, ler_excel, dividir_treino_teste
+from algoritmo_genetico import treinar, prever, avaliar, ler_excel, dividir_treino_teste
 
 X, y = ler_excel("exemplos/exemplo_1_binario/dados_binario_1.xlsx")
 X_treino, X_teste, y_treino, y_teste = dividir_treino_teste(X, y, seed=0)
 
-modelo = rodar(X_treino, y_treino, geracoes=500, fitness_alvo=0.90, seed=0)
+modelo = treinar(X_treino, y_treino, geracoes=500, fitness_alvo=0.90, seed=0)
 
 previsoes = prever(modelo, X_teste)
+resultado = avaliar(y_teste, previsoes)
 ```
 
 As funções de cada etapa (`criar_cromossomos`, `fitness_binario`, `selecionar_pais_roleta`, `cruzar_um_ponto`, `mutar`, `atualizar_populacao`) também podem ser usadas separadamente, importando dos seus módulos (ex: `from algoritmo_genetico.mutacao import mutar`).
@@ -118,11 +119,11 @@ import numpy as np
 
 thresholds = np.array([-1.5, -0.5, 0.5, 1.5])   # 4 cortes -> 5 classes
 
-modelo = rodar(X, y, thresholds=thresholds, geracoes=2000, fitness_alvo=1.0)
+modelo = treinar(X, y, thresholds=thresholds, geracoes=2000, fitness_alvo=1.0)
 previsoes = prever(modelo, X_novo)
 ```
 
-### Parâmetros do `rodar`
+### Parâmetros do `treinar`
 
 | Parâmetro | Padrão | Descrição |
 |---|---|---|
@@ -140,7 +141,7 @@ previsoes = prever(modelo, X_novo)
 | `seed` | `None` | semente para reprodutibilidade (`None` = aleatório a cada rodada) |
 | `verbose` | `True` | mostra o melhor fitness e a acurácia de cada geração |
 
-O `rodar` devolve um dicionário com `cromossomo` (o melhor encontrado), `fitness`, `acuracia` (fração de acertos nos dados de treino), `geracao` (em que geração parou), `thresholds` e `historico` (listas `melhor`, `medio` e `acuracia` com a evolução por geração).
+O `treinar` devolve um dicionário com `cromossomo` (o melhor encontrado), `fitness`, `acuracia` (fração de acertos nos dados de treino), `geracao` (em que geração parou), `thresholds` e `historico` (listas `melhor`, `medio` e `acuracia` com a evolução por geração).
 
 ---
 
@@ -156,6 +157,13 @@ A planilha (`.xlsx` ou `.csv`) deve seguir este layout:
 - **Primeira coluna:** identificador da amostra (é ignorada)
 - **Colunas do meio:** features
 - **Última coluna:** classe
+
+Para classificar dados novos, que não têm a coluna de classe, use `tem_classe=False`. Nesse caso, a função devolve só o `X`:
+
+```python
+X_novo = ler_excel("dados_novos.xlsx", tem_classe=False)
+previsoes = prever(modelo, X_novo)
+```
 
 Um modelo pronto está em [`exemplos/base_de_dados_para_exemplos/modelo_base.xlsx`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/exemplos/base_de_dados_para_exemplos/modelo_base.xlsx).
 
@@ -180,8 +188,9 @@ O notebook binário mostra **uma geração passo a passo**, chamando cada funç�
 AlgoritmoGenetico/
 ├── src/
 │   └── algoritmo_genetico/
-│       ├── __init__.py      # API pública: rodar, prever, ler_excel, ler_csv, dividir_treino_teste
-│       ├── nucleo.py        # loop principal (rodar) e previsão (prever)
+│       ├── __init__.py      # API pública: treinar, prever, avaliar, matriz_confusao, ler_excel, ler_csv, dividir_treino_teste
+│       ├── nucleo.py        # loop principal (treinar) e previsão (prever)
+│       ├── avaliacao.py     # avaliação do modelo (avaliar) e matriz de confusão
 │       ├── criacao.py       # 1. população inicial
 │       ├── fitness.py       # 2. fitness binário, ordinal e percentual
 │       ├── selecao.py       # 3. seleção por roleta

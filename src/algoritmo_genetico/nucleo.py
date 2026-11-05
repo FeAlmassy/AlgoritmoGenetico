@@ -1,4 +1,4 @@
-"""Loop principal do algoritmo genético: treino (rodar) e previsão (prever)."""
+"""Loop principal do algoritmo genético: treino (treinar) e previsão (prever)."""
 
 import numpy as np
 
@@ -10,7 +10,24 @@ from .mutacao import mutar
 from .selecao import selecionar_pais_roleta
 
 
-def rodar(
+def _validar_features(X: np.ndarray) -> None:
+    """
+    Confere se X só tem números válidos. Sem isso, uma célula vazia na planilha
+    viraria uma classe prevista errada, sem nenhum aviso.
+
+    Parâmetros:
+        X -> array com os dados
+    """
+    try:
+        valores = X.astype(float)
+    except (TypeError, ValueError):
+        raise TypeError("X deve conter apenas números, mas encontrou texto ou outro tipo de valor") from None
+
+    if not np.isfinite(valores).all():
+        raise ValueError("X tem células vazias ou valores inválidos (NaN ou infinito), corrija esses dados antes de continuar")
+
+
+def treinar(
     X: np.ndarray,
     y: np.ndarray,
     qtd_cromossomos: int = 6,
@@ -73,6 +90,11 @@ def rodar(
     if X.shape[0] != y.shape[0]:
         raise ValueError(f"X tem {X.shape[0]} amostras, mas y tem {y.shape[0]} valores")
 
+    if X.shape[1] == 0:
+        raise ValueError("X não tem features (precisa de pelo menos 1 coluna)")
+
+    _validar_features(X)
+
     if not isinstance(qtd_cromossomos, int):
         raise TypeError("qtd_cromossomos deve ser um número inteiro")
 
@@ -82,8 +104,8 @@ def rodar(
     if not isinstance(qtd_genes_mutados, int):
         raise TypeError("qtd_genes_mutados deve ser um número inteiro")
 
-    if qtd_genes_mutados < 0:
-        raise ValueError(f"qtd_genes_mutados deve ser >= 0, recebeu {qtd_genes_mutados}")
+    if qtd_genes_mutados < 0 or qtd_genes_mutados > X.shape[1] + 1:
+        raise ValueError(f"qtd_genes_mutados deve estar entre 0 e {X.shape[1] + 1} (qtd de genes), recebeu {qtd_genes_mutados}")
 
     if not isinstance(qtd_filhos, int):
         raise TypeError("qtd_filhos deve ser um número inteiro")
@@ -181,6 +203,10 @@ def rodar(
                 print(f"\nFitness alvo {fitness_alvo} atingido na geração {geracao_final}.")
             break
 
+        # na última geração não cria filhos: eles não chegariam a competir com o melhor
+        if geracao_final == geracoes:
+            break
+
         # seleção -> cruzamento -> mutação -> avaliação -> substituição
         pai, mae = selecionar_pais_roleta(populacao, percentuais)
         filhos = cruzar_um_ponto(pai, mae, qtd_filhos)
@@ -202,12 +228,16 @@ def rodar(
     }
 
 
+# nome antigo, mantido para não quebrar quem usa a versão 1.0.0
+rodar = treinar
+
+
 def prever(modelo: dict, X: np.ndarray) -> np.ndarray:
     """
-    Usa o melhor cromossomo encontrado por rodar() para classificar dados novos.
+    Usa o melhor cromossomo encontrado por treinar() para classificar dados novos.
 
     Parâmetros:
-        modelo -> dict retornado por rodar()
+        modelo -> dict retornado por treinar()
         X -> array (features,) com um registro ou (amostras, features) com vários
 
     Retorna:
@@ -215,7 +245,7 @@ def prever(modelo: dict, X: np.ndarray) -> np.ndarray:
     """
 
     if not isinstance(modelo, dict):
-        raise TypeError("O parâmetro modelo deve ser um dict (retornado por rodar())")
+        raise TypeError("O parâmetro modelo deve ser um dict (retornado por treinar())")
 
     if "cromossomo" not in modelo:
         raise ValueError("modelo inválido: falta a chave 'cromossomo'")
@@ -238,6 +268,8 @@ def prever(modelo: dict, X: np.ndarray) -> np.ndarray:
     if X.ndim not in (1, 2):
         raise ValueError(f"X deve ser 1D (um registro) ou 2D (vários registros), recebeu {X.ndim}D")
 
+    _validar_features(X)
+
     cromossomo = modelo["cromossomo"]
     thresholds = modelo["thresholds"]
 
@@ -254,7 +286,7 @@ def prever(modelo: dict, X: np.ndarray) -> np.ndarray:
             f"X tem {X.shape[1]} features, mas o cromossomo foi treinado com {len(genes)} features"
         )
 
-    q = X @ genes + bias
+    q = np.dot(X, genes) + bias
 
     if thresholds is None:
         return np.where(q >= 0, 1, 0)
