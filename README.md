@@ -243,11 +243,7 @@ Cada etapa do algoritmo fica em um módulo próprio, então dá para trocar uma 
 
 ## Próximos passos
 
-- [x] Empacotar com `pyproject.toml` e publicar no PyPI
-- [ ] Testes automáticos com `pytest`
-- [ ] Classe no estilo scikit-learn (`treinar` / `prever`)
-- [ ] Salvar e carregar modelos treinados
-- [ ] Aceitar classes em texto (ex: `"bom"`, `"ruim"`) sem conversão manual
+- [ ] Lancar e modificar o codigo pra versao em ingles na 3.0.0
 
 ---
 
