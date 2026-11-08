@@ -8,5 +8,5 @@ build/
 *.egg-info/
 .dist/
 
-# PDF do guia: gerado a partir do .tex, fica fora do Git
-documentacao/*.pdf
+# Guia em PDF e LaTeX: entregue à parte, fica fora do Git
+documentacao/
