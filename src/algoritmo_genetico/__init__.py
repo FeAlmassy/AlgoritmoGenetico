@@ -8,4 +8,4 @@ from .nucleo import prever, rodar, treinar
 # rodar fica fora do __all__: é só o nome antigo de treinar, mantido por compatibilidade
 __all__ = ["treinar", "prever", "avaliar", "matriz_confusao", "ler_excel", "ler_csv", "dividir_treino_teste"]
 
-__version__ = "1.1.0"
+__version__ = "2.0.0"

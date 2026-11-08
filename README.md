@@ -228,6 +228,12 @@ Cada etapa do algoritmo fica em um módulo próprio, então dá para trocar uma 
 
 ## Novidades
 
+### 2.0.0
+- Nova função **`avaliar`**, que mostra e devolve acurácia, fitness, recall por classe e matriz de confusão. A matriz também pode ser obtida sozinha com **`matriz_confusao`**.
+- `ler_excel` e `ler_csv` ganharam o parâmetro **`tem_classe`**: com `tem_classe=False`, leem dados novos, sem a coluna de classe.
+- Validações novas: células vazias, texto nas features e classes em texto no modo ordinal agora geram mensagens de erro claras, em vez de resultados errados sem aviso.
+- O treino não cria mais filhos na última geração, porque eles não chegariam a ser comparados com o melhor cromossomo.
+
 ### 1.1.0
 - `rodar` agora se chama **`treinar`**, formando par com `prever`. O nome antigo continua funcionando, com aviso de depreciação.
 - **Novos valores padrão**, que dão resultados bem melhores sem precisar ajustar nada: `qtd_cromossomos=30`, `qtd_genes_mutados=2`, `qtd_filhos=16`, `qtd_substituicoes=None` (metade dos filhos), `geracoes=1000` e `fitness_alvo=1.0`.
