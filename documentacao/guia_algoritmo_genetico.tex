@@ -21,6 +21,9 @@
 \usepackage[most]{tcolorbox}
 \usepackage{tikz}
 \usepackage{pgfplots}
+\usepackage[titles]{tocloft}
+\setlength{\cftbeforesecskip}{0.25em}
+\setlength{\cftbeforepartskip}{0.8em}
 \usepackage[hidelinks]{hyperref}
 
 \usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric,fit}
@@ -133,7 +136,7 @@
 
 % \cmcell{coluna}{linha}{valor}{maximo}{largura}
 \newcommand{\cmcell}[5]{%
-  \pgfmathsetmacro{\intens}{8+80*#3/#4}%
+  \pgfmathsetmacro{\intens}{8+80*(#3/#4)}%
   \pgfmathsetmacro{\escuro}{ifthenelse(\intens>62,1,0)}%
   \ifdim\escuro pt>0.5pt\def\corval{white}\else\def\corval{tinta}\fi
   \node[draw=white,line width=1.2pt,fill=azul!\intens,minimum width=#5 cm,minimum height=#5 cm,
@@ -217,7 +220,7 @@ Resultados de exames & normal, anormal ou inconclusivo & em desenvolvimento\\
 \end{tabularx}
 \end{tabela}
 
-Por razões de privacidade, não podemos citar o nome do banco.
+Por razões de privacidade, não podemos citar o nome do banco. Na Parte~III, mostramos os resultados com cogumelos, doença cardíaca, Covid e diabetes.
 
 \subsubsection{O exemplo que estamos preparando: dados de saúde}
 
@@ -1961,5 +1964,408 @@ Se as colunas estiverem fora da ordem do treino, nenhum erro aparece, porque a b
 \end{nota}
 
 Encontrou um erro que não está aqui, ou tem uma sugestão? Abra uma issue no \href{https://github.com/FeAlmassy/AlgoritmoGenetico/issues}{repositório do projeto} ou fale com a gente pelos contatos da seção \hyperref[sec:sobre]{Sobre este projeto}.
+
+
+\clearpage
+% ==================================================================
+\part{Exemplos}
+% ==================================================================
+
+\section{Como avaliamos os exemplos}
+
+Esta parte aplica a biblioteca a quatro problemas diferentes. Em todos, seguimos o mesmo processo:
+
+\begin{enumerate}
+  \item \textbf{Preparar os dados:} deixar a base no formato da biblioteca, só com números, e retirar colunas que entregam a resposta.
+  \item \textbf{Comparar com referências:} um chute sempre na classe mais comum e a regressão logística do scikit-learn, com e sem balanceamento das classes.
+  \item \textbf{Repetir:} os números são médias de 20 divisões de treino e teste, usando os valores padrão da biblioteca. Com uma única divisão, o resultado poderia ser sorte.
+  \item \textbf{Embaralhar as classes:} se o modelo continuar indo bem com classes aleatórias, há algum erro. O esperado é cair para o nível do acaso.
+\end{enumerate}
+
+\subsection{Resumo dos resultados}
+
+\begin{tabela}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccccc}
+\toprule
+Base & Lições & Classes & Chute & \shortstack{Algoritmo\\genético} & \shortstack{Regressão\\logística} & \shortstack{Regressão\\balanceada}\\
+\midrule
+Cogumelos & 8124 & 2 & 51,8\% & 99,6\% & 100,0\% & 100,0\%\\
+Doença cardíaca & 917 & 2 & 55,3\% & 85,8\% & 86,7\% & 86,7\%\\
+Covid & 20000 & 2 & 92,6\% & 84,8\% & 93,6\% & 87,5\%\\
+Diabetes & 40000 & 3 & 84,0\% & 57,5\% & 84,6\% & 64,8\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+A tabela mostra a acurácia no teste. Nas bases desbalanceadas, ela não conta a história toda: na Covid e no diabetes, o chute e a regressão logística padrão têm acurácia alta porque quase ignoram a classe rara (Figura~\ref{fig:rara}).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=6.5cm,y=0.62cm]
+  \draw[linha] (0,0.7) -- (0,-5.1);
+  \node[font=\small\bfseries,anchor=east] at (-0.03,0.2) {Covid: mortes};
+  \fill[azul] (0,-0.35) rectangle (0.8657,-0.75); \node[anchor=west,font=\small] at (0.88,-0.55) {86,6\%};
+  \node[anchor=east,font=\small] at (-0.03,-0.55) {Algoritmo genético};
+  \fill[laranja] (0,-1.05) rectangle (0.3596,-1.45); \node[anchor=west,font=\small] at (0.375,-1.25) {36,0\%};
+  \node[anchor=east,font=\small] at (-0.03,-1.25) {Regressão logística};
+  \fill[agua] (0,-1.75) rectangle (0.8733,-2.15); \node[anchor=west,font=\small] at (0.888,-1.95) {87,3\%};
+  \node[anchor=east,font=\small] at (-0.03,-1.95) {Regressão balanceada};
+  \node[font=\small\bfseries,anchor=east] at (-0.03,-2.9) {Diabetes: pré-diabetes};
+  \fill[azul] (0,-3.45) rectangle (0.411,-3.85); \node[anchor=west,font=\small] at (0.426,-3.65) {41,1\%};
+  \node[anchor=east,font=\small] at (-0.03,-3.65) {Algoritmo genético};
+  \node[anchor=west,font=\small] at (0.012,-4.35) {0\%};
+  \fill[laranja] (0,-4.15) rectangle (0.004,-4.55);
+  \node[anchor=east,font=\small] at (-0.03,-4.35) {Regressão logística};
+  \fill[agua] (0,-4.85) rectangle (0.3266,-5.25); \node[anchor=west,font=\small] at (0.342,-5.05) {32,7\%};
+  \node[anchor=east,font=\small] at (-0.03,-5.05) {Regressão balanceada};
+\end{tikzpicture}
+\caption{Quanto da classe rara cada modelo encontra (recall no teste).}
+\label{fig:rara}
+\end{figure}
+
+\subsection{Como ler as tabelas}
+
+\begin{itemize}
+  \item \textbf{Chute:} a acurácia de responder sempre a classe mais comum. Um modelo útil precisa, no mínimo, ir além disso em alguma medida.
+  \item \textbf{Regressão logística:} um modelo linear de referência, com a configuração padrão do scikit-learn. Ela busca acertar o maior número de lições, então tende a favorecer a classe maior.
+  \item \textbf{Regressão balanceada:} a mesma regressão, com \code{class_weight="balanced"}, que dá mais peso aos erros das classes menores. É a comparação mais próxima do fitness.
+  \item \textbf{Treino e teste:} o resultado que importa é o do teste. Uma diferença grande entre os dois indica overfitting.
+\end{itemize}
+
+\subsection{Como preparamos as colunas}
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{lL}
+\toprule
+Tipo de coluna & O que fizemos\\
+\midrule
+Texto ou categoria & uma coluna de 0 e 1 para cada valor, porque trocar por 1, 2, 3 criaria uma ordem falsa\\
+Numérica & mudança de escala, para os valores ficarem próximos do intervalo dos genes, de $-1$ a $1$\\
+Valor constante & removida, porque seria um gene sem efeito\\
+Informação do resultado & removida, porque não existiria no momento da previsão (vazamento)\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+\clearpage
+\section{Exemplo 1: cogumelos}
+
+\textbf{O problema:} dizer se um cogumelo é comestível (classe 1) ou venenoso (classe 0), a partir de características como cheiro, cor e formato.
+
+\subsection{Preparação}
+
+A base tem 8124 lições, com 22 colunas em texto. O arquivo \code{dados_cogumelos.xlsx} ficou com 116 colunas de 0 e 1.
+
+\begin{itemize}
+  \item A coluna \emph{veil-type} foi removida, porque tem o mesmo valor em todas as lições.
+  \item As 2480 lições com \code{?} em \emph{stalk-root} foram mantidas, com o \code{?} como uma categoria própria.
+  \item As classes são quase equilibradas: 4208 comestíveis e 3916 venenosos.
+\end{itemize}
+
+\subsection{Resultado}
+
+\begin{tabela}
+\begin{tabular}{lccc}
+\toprule
+Modelo & Acurácia & Recall venenoso & Recall comestível\\
+\midrule
+Algoritmo genético & 99,6\% & 99,4\% & 99,8\%\\
+Regressão logística & 100,0\% & 100,0\% & 100,0\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \def\w{1.6}
+  \cmcell{0}{0}{783}{842}{\w}\cmcell{1}{0}{0}{842}{\w}
+  \cmcell{0}{1}{0}{842}{\w}\cmcell{1}{1}{842}{842}{\w}
+  \node[font=\footnotesize,align=center,text width=1.5cm] at (0*\w,1.2) {venenoso}; \node[font=\footnotesize,align=center,text width=1.5cm] at (1*\w,1.2) {comestível};
+  \node[font=\footnotesize,anchor=east] at (-0.9,0) {venenoso}; \node[font=\footnotesize,anchor=east] at (-0.9,-1*\w) {comestível};
+  \node[rotulo] at (0.5*\w,1.7) {classe prevista};
+  \node[rotulo,rotate=90] at (-2.9,-0.5*\w) {classe real};
+  \node[align=left,font=\small,anchor=west,text width=6.2cm] at (2.6,-0.5*\w) {Nesta divisão, o modelo atingiu fitness 1,0 na geração 469 e acertou todas as 1625 lições de teste.\\[0.4em]Em outras divisões, a acurácia foi até 96,5\%, então esse 100\% não é garantido.};
+\end{tikzpicture}
+\caption{Matriz de confusão no teste, com \code{seed=0}.}
+\end{figure}
+
+\subsection{É overfitting?}
+
+Não. Overfitting é ir bem no treino e mal em dados novos, e aqui o teste acompanha o treino (99,7\% contra 99,6\%). Com as classes embaralhadas, o teste cai para 50,9\%. O overfitting só aparece com pouco treino:
+
+\begin{tabela}
+\begin{tabular}{ccc}
+\toprule
+Lições de treino & Acurácia no treino & Acurácia no teste\\
+\midrule
+81 & 95,1\% & 86,2\%\\
+406 & 99,0\% & 97,2\%\\
+1625 & 99,0\% & 98,9\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\subsection{O que este exemplo ensina}
+
+A acurácia alta vem principalmente de a base ser fácil. Só a coluna de cheiro (\emph{odor}) já acerta 98,5\%, sem nenhum modelo. O resultado mostra que o algoritmo encontra o padrão, mas não mede a sua força, e não serve para decidir se um cogumelo real pode ser comido.
+
+\clearpage
+\section{Exemplo 2: doença cardíaca}
+
+\textbf{O problema:} dizer se um paciente tem doença cardíaca (classe 1) ou não (classe 0), a partir de dados como idade, pressão, colesterol e tipo de dor no peito. Este é um exemplo didático e não serve para diagnóstico.
+
+\subsection{Preparação}
+
+O arquivo \code{dados_coracao.xlsx} tem 917 lições e 21 colunas, com 507 casos de doença e 410 sem doença.
+
+\begin{itemize}
+  \item As colunas numéricas foram reescaladas para ficar entre 0 e 1. Sem isso, os genes não dão conta de valores como colesterol 603, e a acurácia cai para cerca de 72\%.
+  \item Em 172 lições, o colesterol é 0, o que provavelmente indica falta de medição. Trocamos pela mediana e criamos uma coluna que marca esses casos.
+  \item A única lição com pressão 0 foi removida.
+\end{itemize}
+
+\subsection{Resultado}
+
+\begin{tabela}
+\begin{tabular}{lcccc}
+\toprule
+Modelo & Treino & Teste & Recall sem doença & Recall com doença\\
+\midrule
+Algoritmo genético & 89,0\% & 85,8\% & 83,5\% & 87,7\%\\
+Regressão logística & & 86,7\% & 83,5\% & 89,3\%\\
+Regressão balanceada & & 86,7\% & 86,0\% & 87,3\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+O modelo ficou cerca de 1 ponto abaixo da regressão logística, e o teste variou de 81,4\% a 90,2\% entre as divisões. Com as classes embaralhadas, ele cai para 49,7\%.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \def\w{1.6}
+  \cmcell{0}{0}{67}{90}{\w}\cmcell{1}{0}{15}{90}{\w}
+  \cmcell{0}{1}{11}{90}{\w}\cmcell{1}{1}{90}{90}{\w}
+  \node[font=\footnotesize,align=center,text width=1.5cm] at (0*\w,1.2) {sem doença}; \node[font=\footnotesize,align=center,text width=1.5cm] at (1*\w,1.2) {com doença};
+  \node[font=\footnotesize,anchor=east] at (-0.9,0) {sem doença}; \node[font=\footnotesize,anchor=east] at (-0.9,-1*\w) {com doença};
+  \node[rotulo] at (0.5*\w,1.7) {classe prevista};
+  \node[rotulo,rotate=90] at (-2.9,-0.5*\w) {classe real};
+  \node[align=left,font=\small,anchor=west,text width=6.2cm] at (2.6,-0.5*\w) {Nesta divisão, o modelo acertou 85,8\% e deixou passar 11 dos 101 pacientes com doença.\\[0.4em]Ele também deu 15 alarmes falsos entre os 82 pacientes sem doença.};
+\end{tikzpicture}
+\caption{Matriz de confusão no teste, com \code{seed=0}.}
+\end{figure}
+
+\subsection{Mudar os dados ajuda?}
+
+Pouco. Testamos outras preparações nas mesmas 10 divisões, com a escala calculada só no treino:
+
+\begin{tabela}
+\begin{tabular}{lcc}
+\toprule
+Preparação & Algoritmo genético & Regressão logística\\
+\midrule
+Atual (0 a 1, com a coluna do colesterol ausente) & 86,1\% & 86,7\%\\
+Com interações entre os números & 86,5\% & 87,0\%\\
+Escala z (média 0) & 86,2\% & 87,3\%\\
+Sem a coluna do colesterol ausente & 85,5\% & 86,1\%\\
+Números em faixas & 85,5\% & 86,6\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+As diferenças são menores que a variação entre as divisões, de cerca de 2 pontos. Mais gerações também não ajudaram: com 10000 gerações, o treino sobe, mas o teste não melhora.
+
+\subsection{Quanto treino o modelo precisa?}
+
+A diferença entre treino e teste é pequena com a base inteira, mas cresce quando há poucas lições de treino:
+
+\begin{tabela}
+\begin{tabular}{ccc}
+\toprule
+Lições de treino & Acurácia no treino & Acurácia no teste\\
+\midrule
+45 & 100,0\% & 76,7\%\\
+183 & 91,8\% & 83,9\%\\
+459 & 88,9\% & 86,5\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\subsection{Um cuidado com o colesterol ausente}
+
+Entre as lições com colesterol 0, 88,4\% têm doença, contra 47,7\% nas demais. Isso pode refletir a forma como os dados foram coletados, e não algo médico. Por isso, um modelo que usa essa coluna pode não funcionar igual em outros hospitais.
+
+\subsection{O que este exemplo ensina}
+
+Esta é a comparação mais equilibrada: em uma base bem menos fácil que a de cogumelos, o modelo chega perto de uma referência padrão, e a escala das colunas faz muita diferença.
+
+\clearpage
+\section{Exemplo 3: Covid}
+
+\textbf{O problema:} dizer se um paciente morreu (classe 1) ou sobreviveu (classe 0), a partir de dados disponíveis no atendimento. Apenas 7,4\% dos pacientes da amostra morreram. Este é um exemplo didático e não serve para decisão médica.
+
+\subsection{Preparação}
+
+Usamos uma amostra aleatória de 20 mil dos 1.048.575 pacientes da base, com 56 colunas.
+
+\begin{itemize}
+  \item A classe vem da coluna \emph{DATE\_DIED}: o paciente morreu quando ela tem uma data.
+  \item As colunas \emph{INTUBED}, \emph{ICU} e \emph{PATIENT\_TYPE} foram removidas, porque indicam o que aconteceu depois do atendimento. Com elas, a acurácia sobe para cerca de 88\%, usando informação que não existiria no momento da previsão.
+  \item Na coluna \emph{CLASIFFICATION\_FINAL}, todos os pacientes com o valor 2 morreram, o que entregaria a resposta. Por isso, agrupamos os valores em positivo (1 a 3) ou não.
+  \item Códigos como 97, 98 e 99 viraram as categorias ``não se aplica'' ou ``desconhecido''.
+\end{itemize}
+
+\subsection{Resultado}
+
+\begin{tabela}
+\begin{tabular}{lccc}
+\toprule
+Modelo & Acurácia & Recall sobreviveu & Recall morreu\\
+\midrule
+Chute na classe mais comum & 92,6\% & 100,0\% & 0,0\%\\
+Algoritmo genético & 84,8\% & 84,6\% & 86,6\%\\
+Regressão logística & 93,6\% & 98,2\% & 36,0\%\\
+Regressão balanceada & 87,5\% & 87,6\% & 87,3\%\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \def\w{1.6}
+  \cmcell{0}{0}{3131}{3131}{\w}\cmcell{1}{0}{573}{3131}{\w}
+  \cmcell{0}{1}{40}{3131}{\w}\cmcell{1}{1}{256}{3131}{\w}
+  \node[font=\footnotesize,align=center,text width=1.5cm] at (0*\w,1.2) {sobreviveu}; \node[font=\footnotesize,align=center,text width=1.5cm] at (1*\w,1.2) {morreu};
+  \node[font=\footnotesize,anchor=east] at (-0.9,0) {sobreviveu}; \node[font=\footnotesize,anchor=east] at (-0.9,-1*\w) {morreu};
+  \node[rotulo] at (0.5*\w,1.7) {classe prevista};
+  \node[rotulo,rotate=90] at (-2.9,-0.5*\w) {classe real};
+  \node[align=left,font=\small,anchor=west,text width=6.2cm] at (2.6,-0.5*\w) {Nesta divisão, o modelo encontrou 256 das 296 mortes.\\[0.4em]Em troca, marcou 573 dos 3704 sobreviventes como mortes, então 829 previsões de morte foram feitas para 256 acertos.};
+\end{tikzpicture}
+\caption{Matriz de confusão no teste, com \code{seed=0}.}
+\end{figure}
+
+\subsection{O que este exemplo ensina}
+
+Olhando só a acurácia, o algoritmo pareceria pior que a regressão logística padrão. Mas ela encontra só 36\% das mortes, enquanto o fitness faz o modelo encontrar 87\%, sem nenhum ajuste, porque cada classe pesa o mesmo no produto dos recalls.
+
+Essa vantagem some quando a regressão logística também é balanceada: ela encontra praticamente o mesmo número de mortes, com cerca de 3 pontos a mais de acurácia. Por isso, a comparação justa é com a regressão balanceada.
+
+\clearpage
+\section{Exemplo 4: estágios de diabetes}
+
+\textbf{O problema:} dizer se uma pessoa está sem diabetes (classe 0), com pré-diabetes (classe 1) ou com diabetes (classe 2), a partir de dados de saúde e hábitos de uma pesquisa. Como as classes têm uma ordem, este é o nosso exemplo ordinal. Ele não serve para diagnóstico.
+
+\subsection{Preparação}
+
+O arquivo \code{dados_diabetes.xlsx} usa uma amostra aleatória de 40 mil das 253.680 pessoas da base, mantendo as proporções: 84,0\% sem diabetes, 1,8\% com pré-diabetes e 14,2\% com diabetes.
+
+\begin{itemize}
+  \item As 21 colunas passaram pela escala z, que deixa cada uma com média 0.
+  \item Com 3 classes, são 2 pontos de corte. Usamos os thresholds $-1$ e $1$, que tiveram um dos maiores fitness entre os testados. Cortes mais próximos aumentam a acurácia, mas encontram cada vez menos pré-diabetes.
+\end{itemize}
+
+\subsection{Resultado}
+
+\begin{tabela}
+\begin{tabular}{lccccc}
+\toprule
+Modelo & Acurácia & Sem diabetes & Pré-diabetes & Diabetes & Fitness\\
+\midrule
+Chute na classe mais comum & 84,0\% & 100,0\% & 0,0\% & 0,0\% & 0\\
+Algoritmo genético & 57,5\% & 58,9\% & 41,1\% & 51,6\% & 0,125\\
+Regressão logística & 84,6\% & 97,4\% & 0,0\% & 19,8\% & 0\\
+Regressão balanceada & 64,8\% & 67,0\% & 32,7\% & 56,3\% & 0,123\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+As colunas de classe mostram o recall de cada uma. Com as classes embaralhadas, a acurácia cai para 33,4\%, o nível do acaso com 3 classes.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \def\w{1.25}
+  \foreach \lin/\linha in {0/{3994,1825,900},1/{29,59,53},2/{156,413,570}} {
+    \foreach \v [count=\c from 0] in \linha {\cmcell{\c}{\lin}{\v}{3994}{\w}}
+  }
+  \foreach \n [count=\i from 0] in {sem,pré,com} {
+    \node[font=\footnotesize] at (\i*\w,0.85) {\n};
+    \node[font=\footnotesize,anchor=east] at (-0.7,-\i*\w) {\n};
+  }
+  \node[rotulo] at (1*\w,1.25) {classe prevista};
+  \node[rotulo,rotate=90] at (-1.6,-1*\w) {classe real};
+  \node[align=left,font=\small,anchor=west,text width=7cm] at (3.5,-1*\w) {Das 2297 previsões de pré-diabetes, só 59 estavam certas (2,6\%), porque há muito mais pessoas sem diabetes do que com pré-diabetes.\\[0.4em]De 6719 pessoas sem diabetes, 2725 foram marcadas com alguma forma da doença.};
+\end{tikzpicture}
+\caption{Matriz de confusão no teste, com \code{seed=0}.}
+\end{figure}
+
+\subsection{O efeito dos thresholds}
+
+Os pontos de corte mudam o equilíbrio entre as classes. Estes são os resultados de 3 divisões:
+
+\begin{tabela}
+\begin{tabular}{cccc}
+\toprule
+Thresholds & Acurácia & Recall pré-diabetes & Fitness\\
+\midrule
+$-2$ e $2$ & 51,7\% & 45,2\% & 0,127\\
+$-1$ e $1$ & 57,8\% & 40,7\% & 0,126\\
+$-0{,}5$ e $0{,}5$ & 59,3\% & 35,0\% & 0,111\\
+$-0{,}25$ e $0{,}25$ & 64,8\% & 27,9\% & 0,094\\
+$-0{,}1$ e $0{,}1$ & 67,6\% & 11,6\% & 0,050\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+Com a faixa do meio mais estreita, menos pessoas caem em pré-diabetes, e a acurácia sobe porque a classe maior é mais acertada.
+
+\subsection{O problema é o desbalanceamento?}
+
+Só em parte. Equilibrar as classes não melhorou o modelo, porque o fitness já trata cada classe separadamente:
+
+\begin{tabela}
+\begin{tabular}{lccc}
+\toprule
+Base & Acurácia & Recalls & Fitness\\
+\midrule
+3 classes, proporção original & 57,5\% & 59\% / 41\% / 52\% & 0,125\\
+3 classes, equilibradas & 50,4\% & 56\% / 45\% / 50\% & 0,126\\
+Sem diabetes contra diabetes, 50-50 & 74,0\% & 70\% / 78\% & 0,546\\
+\bottomrule
+\end{tabular}
+\end{tabela}
+
+As duas últimas linhas usam 5 divisões. Sem o pré-diabetes, o modelo chega a 74\%, empatado com a regressão logística (74,2\%). O nó é o pré-diabetes, que fica no meio do caminho entre as outras duas classes.
+
+\subsection{O que este exemplo ensina}
+
+O fitness lida bem com o desbalanceamento, mas não cria informação que os dados não têm. As colunas são hábitos e condições de saúde, sem exames como glicemia. Encontrar uma classe rara também custa muitos falsos positivos, então o recall deve aparecer junto com a precisão.
+
+\clearpage
+\section{O que aprendemos com os exemplos}
+
+\begin{tabela}
+\begin{tabularx}{\linewidth}{lL}
+\toprule
+Lição & De onde veio\\
+\midrule
+Compare sempre com uma referência & Sem o chute e a regressão logística, 99,6\% em cogumelos e 84,8\% na Covid seriam difíceis de interpretar\\
+A acurácia pode enganar & Na Covid e no diabetes, o chute já acerta 84\% ou mais\\
+Procure colunas que entregam a resposta & \emph{INTUBED}, \emph{ICU} e o valor 2 de \emph{CLASIFFICATION\_FINAL}, na Covid\\
+Cuide da escala das colunas & Na doença cardíaca, sem mudar a escala, a acurácia cai para cerca de 72\%\\
+Teste mais de uma divisão & Em cogumelos, a acurácia variou de 96,5\% a 100\%\\
+Dados melhores valem mais que ajustes & No diabetes, nem mais gerações, nem equilibrar as classes resolvem\\
+\bottomrule
+\end{tabularx}
+\end{tabela}
+
+\subsection{Como o algoritmo se compara}
+
+Nos quatro exemplos, a regressão logística balanceada teve acurácia igual ou maior que a do algoritmo genético, com diferenças de 0,4 a 7,3 pontos. Em recall da classe rara, o algoritmo ficou próximo dela na Covid e acima no pré-diabetes. Isso vale para estas bases e estas configurações, e outras comparações podem dar outros resultados.
+
+O nosso objetivo não é substituir essas ferramentas, e sim entender os modelos por dentro. Nesse sentido, os exemplos mostram que uma biblioteca feita do zero chega perto de uma referência padrão em problemas reais, e também deixam claros os seus limites: o modelo traça fronteiras lineares, usa uma única nota com cortes fixos e depende de mais ajustes de escala e de gerações.
 
 \end{document}
