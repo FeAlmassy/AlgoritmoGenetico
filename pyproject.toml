@@ -3,9 +3,9 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "algoritmo-genetico"
-dynamic = ["version"]  # lida de src/algoritmo_genetico/__init__.py (__version__)
-description = "Classificador linear (binário e ordinal) treinado por algoritmo genético, feito com NumPy"
+name = "genetic-classifier"
+dynamic = ["version"]  # read from src/genetic_classifier/__init__.py (__version__)
+description = "Linear classifier (binary and ordinal) trained by a genetic algorithm, built with NumPy"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -19,13 +19,13 @@ dependencies = [
     "pandas>=2.2",
     "openpyxl>=3.1",
 ]
-keywords = ["algoritmo genetico", "genetic algorithm", "classificacao", "machine learning"]
+keywords = ["genetic algorithm", "evolutionary algorithm", "classification", "ordinal classification", "machine learning"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Natural Language :: Portuguese (Brazilian)",
+    "Natural Language :: English",
 ]
 
 [project.urls]
@@ -33,7 +33,7 @@ Repository = "https://github.com/FeAlmassy/AlgoritmoGenetico"
 Issues = "https://github.com/FeAlmassy/AlgoritmoGenetico/issues"
 
 [tool.hatch.version]
-path = "src/algoritmo_genetico/__init__.py"
+path = "src/genetic_classifier/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/algoritmo_genetico"]
+packages = ["src/genetic_classifier"]

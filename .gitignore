@@ -2,11 +2,11 @@ venv_ag/
 __pycache__/
 *.pyc
 .DS_Store
-testes/*.ipynb
+tests/*.ipynb
 dist/
 build/
 *.egg-info/
 .dist/
 
-# Guia em PDF e LaTeX: entregue à parte, fica fora do Git
+# PDF and LaTeX guide: delivered separately, kept out of Git
 documentacao/

@@ -1,259 +1,276 @@
-# Algoritmo Genético para Classificação
+# Genetic Classifier
 
-Biblioteca em Python que treina um **classificador linear usando algoritmo genético**, escrita do zero com NumPy.
+A Python library that trains a **linear classifier with a genetic algorithm**, written from scratch with NumPy.
 
-Em vez de usar gradiente (como a regressão logística), o modelo **evolui** uma população de soluções: as melhores se reproduzem, sofrem mutações e, geração após geração, a classificação melhora.
+Instead of using gradients (like logistic regression), the model **evolves** a population of solutions: the best ones reproduce, mutate and, generation after generation, the classification improves.
 
-Funciona para:
-- **Classificação binária** (2 classes: 0 e 1)
-- **Classificação ordinal** (K classes com ordem, ex: ruim < médio < bom)
+It works for:
+- **Binary classification** (2 classes: 0 and 1)
+- **Ordinal classification** (K ordered classes, e.g. bad < average < good)
 
 ---
 
-## Como funciona
+## How it works
 
-Cada **cromossomo** é uma lista de números: um **bias** e um **peso** para cada feature. Com eles o modelo calcula uma nota para cada amostra:
-
-```
-nota = bias + peso₁·x₁ + peso₂·x₂ + ... + pesoₙ·xₙ
-```
-
-- **Binário:** nota ≥ 0 → classe 1, nota < 0 → classe 0
-- **Ordinal:** a nota é dividida em faixas pelos **thresholds** (pontos de corte), e cada faixa é uma classe
-
-### O fitness
-
-A nota de cada cromossomo (fitness) é o **produto do recall de cada classe**:
+Each **chromosome** is a list of numbers: one **bias** and one **weight** per feature. With them the model computes a score for each sample:
 
 ```
-fitness = recall(classe 0) × recall(classe 1) × ... × recall(classe K-1)
+score = bias + weight₁·x₁ + weight₂·x₂ + ... + weightₙ·xₙ
 ```
 
-Se o modelo errar todas as amostras de uma classe, o fitness vira 0. Isso obriga o modelo a acertar **todas** as classes, e não só a mais comum, o que é útil quando as classes são desbalanceadas.
+- **Binary:** score ≥ 0 → class 1, score < 0 → class 0
+- **Ordinal:** the score is split into ranges by the **thresholds** (cut points), and each range is a class
 
-### O ciclo do algoritmo
+### The fitness
+
+The score of each chromosome (its fitness) is the **product of the recall of each class**:
 
 ```
- 1. criar população aleatória
+fitness = recall(class 0) × recall(class 1) × ... × recall(class K-1)
+```
+
+If the model gets every sample of a class wrong, the fitness becomes 0. This forces the model to get **every** class right, not only the most common one, which is useful when the classes are imbalanced.
+
+### The algorithm cycle
+
+```
+ 1. create random population
           │
           ▼
- 2. calcular fitness ◄──────────────┐
+ 2. compute fitness ◄───────────────┐
           │                         │
           ▼                         │
- 3. selecionar pai e mãe (roleta)   │
+ 3. select two parents (roulette)   │
           │                         │
           ▼                         │
- 4. cruzamento (corte em 1 ponto)   │
+ 4. crossover (one cut point)       │
           │                         │
           ▼                         │
- 5. mutação                         │
+ 5. mutation                        │
           │                         │
           ▼                         │
- 6. trocar os piores pelos ─────────┘
-    melhores filhos
+ 6. replace the worst with ─────────┘
+    the best offspring
 ```
 
-O ciclo para quando atinge o fitness alvo ou acaba o número de gerações.
+The cycle stops when it reaches the target fitness or runs out of generations.
 
-| Etapa | O que faz |
+| Step | What it does |
 |---|---|
-| **Criação** | Gera cromossomos com genes aleatórios entre -1 e 1 |
-| **Fitness** | Dá uma nota de 0 a 1 para cada cromossomo |
-| **Seleção** | Sorteia pai e mãe por roleta: quem tem fitness maior tem mais chance |
-| **Cruzamento** | O filho pega o começo do pai e o final da mãe, a partir de um ponto de corte aleatório |
-| **Mutação** | Troca alguns genes de cada filho por valores aleatórios novos |
-| **Atualização** | Os piores da população saem e os melhores filhos entram (elitismo) |
+| **Creation** | Creates chromosomes with random genes between -1 and 1 |
+| **Fitness** | Gives each chromosome a score from 0 to 1 |
+| **Selection** | Draws two parents by roulette: the higher the fitness, the higher the chance |
+| **Crossover** | The child takes the beginning of one parent and the end of the other, from a random cut point |
+| **Mutation** | Replaces some genes of each child with new random values |
+| **Update** | The worst of the population leave and the best offspring come in (elitism) |
 
 ---
 
-## Instalação
+## Installation
 
-Requer **Python 3.10+**.
+Requires **Python 3.10+**.
 
 ```bash
-pip install algoritmo-genetico
+pip install genetic-classifier
 ```
 
-Ou direto do GitHub:
+Or straight from GitHub:
 
 ```bash
 pip install git+https://github.com/FeAlmassy/AlgoritmoGenetico.git
 ```
 
-### Para desenvolver
+### For development
 
 ```bash
 git clone https://github.com/FeAlmassy/AlgoritmoGenetico.git
 cd AlgoritmoGenetico
 python -m venv venv_ag
-source venv_ag/bin/activate        # no Windows: venv_ag\Scripts\activate
-pip install -e .                   # modo editável: mudanças no código valem na hora
+source venv_ag/bin/activate        # on Windows: venv_ag\Scripts\activate
+pip install -e .                   # editable mode: code changes apply right away
 ```
 
 ---
 
-## Uso rápido
+## Quick start
 
-### Binário
+### Binary
 
 ```python
-from algoritmo_genetico import treinar, prever, avaliar, ler_excel, dividir_treino_teste
+from genetic_classifier import train, predict, evaluate, read_excel, train_test_split
 
-X, y = ler_excel("exemplos/exemplo_1_binario/dados_binario_1.xlsx")
-X_treino, X_teste, y_treino, y_teste = dividir_treino_teste(X, y, seed=0)
+X, y = read_excel("examples/example_1_binary/binary_data_1.xlsx")
+X_train, X_test, y_train, y_test = train_test_split(X, y, seed=0)
 
-modelo = treinar(X_treino, y_treino, seed=0)    # aprende só com o treino
+model = train(X_train, y_train, seed=0)    # learns from the training set only
 
-previsoes = prever(modelo, X_teste)             # classifica dados que o modelo nunca viu
-resultado = avaliar(y_teste, previsoes)      # mostra acurácia, fitness, recall e matriz de confusão
+y_pred = predict(model, X_test)            # classifies data the model has never seen
+results = evaluate(y_test, y_pred)         # prints accuracy, fitness, recall and confusion matrix
 ```
 
-> Os valores padrão do `treinar` já dão um bom resultado na maioria dos casos. Ajuste os parâmetros só se precisar.
+> The default values of `train` already give good results in most cases. Only tune the parameters if you need to.
 
-As funções de cada etapa (`criar_cromossomos`, `fitness_binario`, `selecionar_pais_roleta`, `cruzar_um_ponto`, `mutar`, `atualizar_populacao`) também podem ser usadas separadamente, importando dos seus módulos (ex: `from algoritmo_genetico.mutacao import mutar`).
+The functions of each step (`create_chromosomes`, `binary_fitness`, `select_parents_roulette`, `one_point_crossover`, `mutate`, `update_population`) can also be used on their own, imported from their modules (e.g. `from genetic_classifier.mutation import mutate`).
 
-### Ordinal (várias classes)
+### Ordinal (several classes)
 
-As classes precisam ser números de `0` a `K-1`, na ordem da menor para a maior. Para K classes, passe K-1 thresholds em ordem crescente:
+The classes must be numbers from `0` to `K-1`, ordered from lowest to highest. For K classes, pass K-1 thresholds in increasing order:
 
 ```python
 import numpy as np
 
-thresholds = np.array([-1.5, -0.5, 0.5, 1.5])   # 4 cortes -> 5 classes
+thresholds = np.array([-1.5, -0.5, 0.5, 1.5])   # 4 cuts -> 5 classes
 
-modelo = treinar(X, y, thresholds=thresholds, geracoes=2000)
-previsoes = prever(modelo, X_novo)
+model = train(X, y, thresholds=thresholds, n_generations=2000)
+y_pred = predict(model, X_new)
 ```
 
-### Parâmetros do `treinar`
+### `train` parameters
 
-| Parâmetro | Padrão | Descrição |
+| Parameter | Default | Description |
 |---|---|---|
-| `X` | — | array (amostras, features) com os dados |
-| `y` | — | vetor com a classe de cada amostra |
-| `qtd_cromossomos` | `30` | tamanho da população |
-| `qtd_genes_mutados` | `2` | quantos genes mudam em cada filho |
-| `qtd_filhos` | `16` | quantos filhos por geração |
-| `qtd_substituicoes` | `None` | quantos piores da população são trocados pelos melhores filhos (no máximo o menor entre `qtd_cromossomos` e `qtd_filhos`). `None` = metade de `qtd_filhos` |
-| `geracoes` | `1000` | número máximo de gerações |
-| `fitness_alvo` | `1.0` | para quando o melhor fitness chega nesse valor (`1.0` = roda todas as gerações, a não ser que acerte tudo) |
-| `thresholds` | `None` | `None` = binário; array com K-1 cortes = ordinal |
-| `minimo` | `-1.0` | menor valor dos genes na população inicial |
-| `maximo` | `1.0` | maior valor dos genes na população inicial |
-| `seed` | `None` | semente para reprodutibilidade (`None` = aleatório a cada rodada) |
-| `verbose` | `True` | mostra o melhor fitness e a acurácia de cada geração |
+| `X` | — | array (n_samples, n_features) with the data |
+| `y` | — | vector with the class of each sample |
+| `n_chromosomes` | `30` | population size |
+| `n_mutated_genes` | `2` | how many genes change in each child |
+| `n_offspring` | `16` | how many children per generation |
+| `n_replacements` | `None` | how many of the worst in the population are swapped for the best children (at most the smaller of `n_chromosomes` and `n_offspring`). `None` = half of `n_offspring` |
+| `n_generations` | `1000` | maximum number of generations |
+| `target_fitness` | `1.0` | stops when the best fitness reaches this value (`1.0` = runs every generation unless it gets everything right) |
+| `thresholds` | `None` | `None` = binary; array with K-1 cuts = ordinal |
+| `gene_min` | `-1.0` | smallest gene value in the initial population |
+| `gene_max` | `1.0` | largest gene value in the initial population |
+| `seed` | `None` | random seed for reproducibility (`None` = different every run) |
+| `verbose` | `True` | prints the best fitness and accuracy of every generation |
 
-O `treinar` devolve um dicionário com `cromossomo` (o melhor encontrado), `fitness`, `acuracia` (fração de acertos nos dados de treino), `geracao` (em que geração parou), `thresholds` e `historico` (listas `melhor`, `medio` e `acuracia` com a evolução por geração).
+`train` returns a dictionary with `chromosome` (the best one found), `fitness`, `accuracy` (fraction right on the training data), `generation` (where it stopped), `thresholds` and `history` (lists `best`, `mean` and `accuracy` with the evolution per generation).
 
-> **`rodar` → `treinar`:** a partir da versão 1.1.0, a função `rodar` se chama `treinar`. O nome antigo ainda funciona, mas mostra um aviso (`DeprecationWarning`) e será removido numa versão futura.
+### Tuning the parameters
 
-### Ajustando os parâmetros
+The defaults work well in most cases. If you need to tune them, keep in mind that the parameters affect each other:
 
-Os padrões funcionam bem na maioria dos casos. Se precisar ajustar, os parâmetros se afetam entre si:
+- **Renewal rate = `n_replacements` ÷ `n_chromosomes`:** fraction of the population replaced every generation (default: 8 ÷ 30 ≈ 27%). Too low makes evolution slow; close to 100% the whole population becomes children of the same couple and loses diversity. That is why **increasing only the population usually makes things worse**: increase the replacements too, or leave it as `None`.
+- **`n_offspring` × `n_replacements`:** only the best children enter the population. With more children than replacements, the worst children are discarded.
+- **`n_mutated_genes` × number of features:** what matters is the fraction of the chromosome that changes. With few features, use `1`; with many, `2` or `3`.
+- **Cost ≈ `n_generations` × (`n_chromosomes` + `n_offspring`) × n_samples.**
+- **Explore × refine:** a large population and more mutation search for new solutions; high renewal and little mutation improve the ones already found.
 
-- **Taxa de renovação = `qtd_substituicoes` ÷ `qtd_cromossomos`:** fração da população trocada a cada geração (padrão: 8 ÷ 30 ≈ 27%). Muito baixa deixa a evolução lenta; perto de 100% a população vira toda filhos do mesmo casal e perde diversidade. Por isso, **aumentar só a população costuma piorar**: aumente as substituições junto, ou deixe `None`.
-- **`qtd_filhos` × `qtd_substituicoes`:** só os melhores filhos entram na população. Com mais filhos do que substituições, os piores filhos são descartados.
-- **`qtd_genes_mutados` × número de features:** o que importa é a fração do cromossomo que muda. Com poucas features, use `1`; com muitas, `2` ou `3`.
-- **Custo ≈ `geracoes` × (`qtd_cromossomos` + `qtd_filhos`) × amostras.**
-- **Explorar × refinar:** população grande e mais mutação procuram soluções novas; renovação alta e pouca mutação melhoram as que já existem.
-
-Para saber se vale dar mais gerações, olhe o final de `modelo["historico"]["melhor"]`: se o fitness ainda está subindo, o modelo não terminou.
+To find out whether more generations would help, look at the end of `model["history"]["best"]`: if the fitness is still going up, the model has not finished.
 
 ---
 
-## Formato dos dados
+## Data format
 
-A planilha (`.xlsx` ou `.csv`) deve seguir este layout:
+The spreadsheet (`.xlsx` or `.csv`) must follow this layout:
 
-| Lições | X1 | X2 | ... | Xn | CLASS |
+| Lessons | X1 | X2 | ... | Xn | CLASS |
 |---|---|---|---|---|---|
 | Y001 | 1 | 0 | ... | 1 | 1 |
 | Y002 | 0 | 1 | ... | 0 | 0 |
 
-- **Primeira coluna:** identificador da amostra (é ignorada)
-- **Colunas do meio:** features
-- **Última coluna:** classe
+- **First column:** sample identifier (ignored)
+- **Middle columns:** features
+- **Last column:** class
 
-Para classificar dados novos, que não têm a coluna de classe, use `tem_classe=False`. Nesse caso, a função devolve só o `X`:
+To classify new data, which has no class column, use `has_labels=False`. In that case the function returns only `X`:
 
 ```python
-X_novo = ler_excel("dados_novos.xlsx", tem_classe=False)
-previsoes = prever(modelo, X_novo)
+X_new = read_excel("new_data.xlsx", has_labels=False)
+y_pred = predict(model, X_new)
 ```
 
-Um modelo pronto está em [`exemplos/base_de_dados_para_exemplos/modelo_base.xlsx`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/exemplos/base_de_dados_para_exemplos/modelo_base.xlsx).
+A ready-made template is in [`examples/template/template.xlsx`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/template/template.xlsx).
 
 ---
 
-## Exemplos e resultados
+## Examples and results
 
-| Notebook | Dataset | Classes | Acurácia no teste* |
+| Notebook | Dataset | Classes | Test accuracy* |
 |---|---|---|---|
-| [`exemplo_binario.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/exemplos/exemplo_1_binario/exemplo_binario.ipynb) | `dados_binario_1.xlsx` (539 amostras, 18 features) | 2 | **87%** |
-| [`exemplo_multiclasse.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/exemplos/exemplo_2_multiclasse/exemplo_multiclasse.ipynb) | `dados_multiclasse.xlsx` (261 amostras, 30 features) | 5 | **79%** |
+| [`binary_example.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/example_1_binary/binary_example.ipynb) | `binary_data_1.xlsx` (539 samples, 18 features) | 2 | **87%** |
+| [`multiclass_example.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/example_2_multiclass/multiclass_example.ipynb) | `multiclass_data.xlsx` (261 samples, 30 features) | 5 | **79%** |
+| [`mushroom_classification.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/mushroom_classification/mushroom_classification.ipynb) | `mushroom_data.xlsx` (8124 samples, 117 features) | 2 | **100%** |
+| [`heart_disease_classification.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/heart_disease_classification/heart_disease_classification.ipynb) | `heart_data.xlsx` (917 samples, 21 features) | 2 | **85%** |
+| [`diabetes_classification.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/diabetes_classification/diabetes_classification.ipynb) | `diabetes_data.xlsx` (40000 samples, 21 features) | 3 | **58%**† |
 
-\* Treino com 80% dos dados e teste com os 20% restantes, que o modelo nunca viu. Com `np.random.seed(0)`.
+\* Trained on 80% of the data and tested on the remaining 20%, which the model never saw, always with seed 0.
 
-O notebook binário mostra **uma geração passo a passo**, chamando cada função na ordem do algoritmo. O multiclasse mostra como escolher a ordem das classes quando ela não é conhecida.
+† Prediabetes is very rare in this dataset, so the accuracy alone is misleading: the notebook shows the recall of each class.
+
+The binary notebook shows **one generation step by step**, calling each function in the order of the algorithm. The multiclass one shows how to choose the order of the classes when it is not known.
 
 ---
 
-## Estrutura do projeto
+## Project structure
 
 ```
 AlgoritmoGenetico/
 ├── src/
-│   └── algoritmo_genetico/
-│       ├── __init__.py      # API pública: treinar, prever, avaliar, matriz_confusao, ler_excel, ler_csv, dividir_treino_teste
-│       ├── nucleo.py        # loop principal (treinar) e previsão (prever)
-│       ├── avaliacao.py     # avaliação do modelo (avaliar) e matriz de confusão
-│       ├── criacao.py       # 1. população inicial
-│       ├── fitness.py       # 2. fitness binário, ordinal e percentual
-│       ├── selecao.py       # 3. seleção por roleta
-│       ├── cruzamento.py    # 4. cruzamento de 1 ponto
-│       ├── mutacao.py       # 5. mutação
-│       ├── atualizacao.py   # 6. troca dos piores pelos melhores filhos
-│       ├── leitura.py       # leitura de .xlsx e .csv
-│       └── divisao.py       # divisão em treino e teste (estratificada)
-├── exemplos/                # notebooks e datasets de exemplo
-├── testes/                  # testes automáticos
-├── pyproject.toml           # configuração do pacote (nome, versão, dependências)
-├── LICENSE                  # licença MIT
+│   └── genetic_classifier/
+│       ├── __init__.py      # public API: train, predict, evaluate, confusion_matrix, read_excel, read_csv, train_test_split
+│       ├── core.py          # main loop (train) and prediction (predict)
+│       ├── evaluation.py    # model evaluation (evaluate) and confusion matrix
+│       ├── creation.py      # 1. initial population
+│       ├── fitness.py       # 2. binary and ordinal fitness, roulette proportions
+│       ├── selection.py     # 3. roulette selection
+│       ├── crossover.py     # 4. one-point crossover
+│       ├── mutation.py      # 5. mutation
+│       ├── update.py        # 6. replacing the worst with the best offspring
+│       ├── reading.py       # reading .xlsx and .csv files
+│       └── split.py         # train/test split (stratified)
+├── examples/                # example notebooks and datasets
+├── tests/                   # automated tests
+├── pyproject.toml           # package configuration (name, version, dependencies)
+├── LICENSE                  # MIT license
 └── requirements.txt
 ```
 
-Cada etapa do algoritmo fica em um módulo próprio, então dá para trocar uma peça (por exemplo, testar outra seleção) sem mexer nas outras. Todas as funções verificam os parâmetros recebidos e dão mensagens de erro claras.
+Each step of the algorithm lives in its own module, so you can swap one piece (for example, try another selection method) without touching the others. Every function checks its parameters and gives clear error messages.
 
 ---
 
-## Novidades
+## Changelog
+
+### 3.0.0
+- **The whole library is now in English** and is published on PyPI as **`genetic-classifier`** (import `genetic_classifier`). The Portuguese version stays available as `algoritmo-genetico` 2.0.0.
+- Every docstring follows the same format: what the function does, each parameter with its type, and what it returns with its type and a suggested variable name.
+- The deprecated alias `rodar` was removed.
+
+Migrating from `algoritmo-genetico`:
+
+| 2.x (Portuguese) | 3.0 (English) |
+|---|---|
+| `treinar`, `prever`, `avaliar`, `matriz_confusao` | `train`, `predict`, `evaluate`, `confusion_matrix` |
+| `ler_excel`, `ler_csv` (`tem_classe`) | `read_excel`, `read_csv` (`has_labels`) |
+| `dividir_treino_teste` (`proporcao_treino`, `estratificar`) | `train_test_split` (`train_size`, `stratify`) |
+| `qtd_cromossomos`, `qtd_genes_mutados`, `qtd_filhos`, `qtd_substituicoes` | `n_chromosomes`, `n_mutated_genes`, `n_offspring`, `n_replacements` |
+| `geracoes`, `fitness_alvo`, `minimo`, `maximo` | `n_generations`, `target_fitness`, `gene_min`, `gene_max` |
+| `y_real`, `y_previsto`, `nomes_classes` | `y_true`, `y_pred`, `class_names` |
+| keys `cromossomo`, `acuracia`, `geracao`, `historico` (`melhor`, `medio`) | keys `chromosome`, `accuracy`, `generation`, `history` (`best`, `mean`) |
+| key `matriz` of `avaliar` | key `confusion_matrix` of `evaluate` |
+| `criar_cromossomos`, `fitness_binario`, `fitness_ordinal`, `fitness_percentual` | `create_chromosomes`, `binary_fitness`, `ordinal_fitness`, `fitness_proportions` |
+| `selecionar_pais_roleta`, `cruzar_um_ponto`, `mutar`, `atualizar_populacao` | `select_parents_roulette`, `one_point_crossover`, `mutate`, `update_population` |
 
 ### 2.0.0
-- Nova função **`avaliar`**, que mostra e devolve acurácia, fitness, recall por classe e matriz de confusão. A matriz também pode ser obtida sozinha com **`matriz_confusao`**.
-- `ler_excel` e `ler_csv` ganharam o parâmetro **`tem_classe`**: com `tem_classe=False`, leem dados novos, sem a coluna de classe.
-- Validações novas: células vazias, texto nas features e classes em texto no modo ordinal agora geram mensagens de erro claras, em vez de resultados errados sem aviso.
-- O treino não cria mais filhos na última geração, porque eles não chegariam a ser comparados com o melhor cromossomo.
+- New **`evaluate`** function (`avaliar`), which prints and returns accuracy, fitness, recall per class and the confusion matrix. The matrix can also be obtained on its own with **`confusion_matrix`**.
+- `read_excel` and `read_csv` got the **`has_labels`** parameter: with `has_labels=False` they read new data without the class column.
+- New checks: empty cells, text in the features and text classes in ordinal mode now raise clear error messages instead of silently giving wrong results.
+- Training no longer creates offspring in the last generation, since they would never be compared with the best chromosome.
 
 ### 1.1.0
-- `rodar` agora se chama **`treinar`**, formando par com `prever`. O nome antigo continua funcionando, com aviso de depreciação.
-- **Novos valores padrão**, que dão resultados bem melhores sem precisar ajustar nada: `qtd_cromossomos=30`, `qtd_genes_mutados=2`, `qtd_filhos=16`, `qtd_substituicoes=None` (metade dos filhos), `geracoes=1000` e `fitness_alvo=1.0`.
-- `treinar` converte `X` para float internamente, o que deixa o treino até ~6x mais rápido quando os dados são inteiros (como os lidos pelo `ler_csv`).
+- `rodar` was renamed to **`treinar`** (now `train`), pairing with `prever` (now `predict`).
+- **New default values**, which give much better results without tuning: 30 chromosomes, 2 mutated genes, 16 offspring, replacements = half of the offspring, 1000 generations and target fitness 1.0.
+- Training converts `X` to float internally, which makes it up to ~6x faster when the data is integer (as read by `read_csv`).
 
 ---
 
-## Próximos passos
+## License
 
-- [ ] Lancar e modificar o codigo pra versao em ingles na 3.0.0
-
----
-
-## Licença
-
-Distribuído sob a licença [MIT](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/LICENSE): pode usar, modificar e redistribuir livremente, desde que mantenha o aviso de copyright.
+Distributed under the [MIT license](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/LICENSE): you can use, modify and redistribute it freely, as long as you keep the copyright notice.
 
 ---
 
-## Autores
+## Authors
 
 - **Fellipe Almassy** — [GitHub](https://github.com/FeAlmassy)
 - **Matheus Gomes** — [GitHub](https://github.com/matheos-hash)
