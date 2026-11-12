@@ -1,34 +1,34 @@
-# Documento: como funciona o algoritmo genético
+# Document: how the genetic algorithm works
 
-Explicação do algoritmo implementado nesta biblioteca, com notação matemática e exemplos numéricos.
+Explanation of the algorithm implemented in this library, with mathematical notation and numerical examples.
 
-| Arquivo | Conteúdo |
+| File | Content |
 |---|---|
-| `algoritmo_genetico.md` | Documento em Markdown, com as fórmulas renderizadas pelo GitHub |
-| `algoritmo_genetico.tex` | Mesmo conteúdo em LaTeX, para gerar PDF |
+| `genetic_algorithm.md` | Markdown document, with formulas rendered by GitHub |
+| `genetic_algorithm.tex` | Same content in LaTeX, to build a PDF |
 
-## O que o documento cobre
+## What the document covers
 
-1. Objetivo do algoritmo e notação
-2. Representação da solução: cromossomo, bias, genes e regras de decisão (binária e ordinal)
-3. As seis etapas do ciclo: criação, fitness, seleção, cruzamento, mutação e atualização
-4. Parâmetros de `treinar` e a função que implementa cada etapa
+1. Goal of the algorithm and notation
+2. How a solution is represented: chromosome, bias, genes and decision rules (binary and ordinal)
+3. The six steps of the loop: creation, fitness, selection, crossover, mutation and update
+4. Parameters of `train` and the function that implements each step
 
-## Como gerar o PDF
+## How to build the PDF
 
-Com o [Tectonic](https://tectonic-typesetting.github.io/), que baixa sozinho os pacotes necessários:
-
-```bash
-sudo pacman -S tectonic        # no Arch; em outros sistemas, veja o site
-cd docs
-tectonic algoritmo_genetico.tex
-```
-
-Ou com uma distribuição LaTeX completa, como o TeX Live:
+With [Tectonic](https://tectonic-typesetting.github.io/), which downloads the required packages by itself:
 
 ```bash
+sudo pacman -S tectonic        # on Arch; for other systems, see the website
 cd docs
-latexmk -pdf algoritmo_genetico.tex
+tectonic genetic_algorithm.tex
 ```
 
-O PDF sai em `docs/algoritmo_genetico.pdf`.
+Or with a full LaTeX distribution, such as TeX Live:
+
+```bash
+cd docs
+latexmk -pdf genetic_algorithm.tex
+```
+
+The PDF is written to `docs/genetic_algorithm.pdf`.

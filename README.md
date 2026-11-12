@@ -218,8 +218,9 @@ AlgoritmoGenetico/
 │       ├── update.py        # 6. replacing the worst with the best offspring
 │       ├── reading.py       # reading .xlsx and .csv files
 │       └── split.py         # train/test split (stratified)
+├── docs/                    # how the algorithm works, with math and examples (Markdown and LaTeX)
 ├── examples/                # example notebooks and datasets
-├── tests/                   # automated tests
+├── tests/                   # automated tests (coming soon)
 ├── pyproject.toml           # package configuration (name, version, dependencies)
 ├── LICENSE                  # MIT license
 └── requirements.txt
