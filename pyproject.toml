@@ -29,8 +29,8 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/FeAlmassy/AlgoritmoGenetico"
-Issues = "https://github.com/FeAlmassy/AlgoritmoGenetico/issues"
+Repository = "https://github.com/FeAlmassy/Genetic-Classifier"
+Issues = "https://github.com/FeAlmassy/Genetic-Classifier/issues"
 
 [tool.hatch.version]
 path = "src/genetic_classifier/__init__.py"

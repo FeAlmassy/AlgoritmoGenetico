@@ -77,14 +77,14 @@ pip install genetic-classifier
 Or straight from GitHub:
 
 ```bash
-pip install git+https://github.com/FeAlmassy/AlgoritmoGenetico.git
+pip install git+https://github.com/FeAlmassy/Genetic-Classifier.git
 ```
 
 ### For development
 
 ```bash
-git clone https://github.com/FeAlmassy/AlgoritmoGenetico.git
-cd AlgoritmoGenetico
+git clone https://github.com/FeAlmassy/Genetic-Classifier.git
+cd Genetic-Classifier
 python -m venv venv_ag
 source venv_ag/bin/activate        # on Windows: venv_ag\Scripts\activate
 pip install -e .                   # editable mode: code changes apply right away
@@ -179,7 +179,7 @@ X_new = read_excel("new_data.xlsx", has_labels=False)
 y_pred = predict(model, X_new)
 ```
 
-A ready-made template is in [`examples/template/template.xlsx`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/template/template.xlsx).
+A ready-made template is in [`examples/template/template.xlsx`](https://github.com/FeAlmassy/Genetic-Classifier/blob/main/examples/template/template.xlsx).
 
 ---
 
@@ -187,11 +187,11 @@ A ready-made template is in [`examples/template/template.xlsx`](https://github.c
 
 | Notebook | Dataset | Classes | Test accuracy* |
 |---|---|---|---|
-| [`binary_example.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/example_1_binary/binary_example.ipynb) | `binary_data_1.xlsx` (539 samples, 18 features) | 2 | **87%** |
-| [`multiclass_example.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/example_2_multiclass/multiclass_example.ipynb) | `multiclass_data.xlsx` (261 samples, 30 features) | 5 | **79%** |
-| [`mushroom_classification.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/mushroom_classification/mushroom_classification.ipynb) | `mushroom_data.xlsx` (8124 samples, 117 features) | 2 | **100%** |
-| [`heart_disease_classification.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/heart_disease_classification/heart_disease_classification.ipynb) | `heart_data.xlsx` (917 samples, 21 features) | 2 | **85%** |
-| [`diabetes_classification.ipynb`](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/examples/diabetes_classification/diabetes_classification.ipynb) | `diabetes_data.xlsx` (40000 samples, 21 features) | 3 | **58%**† |
+| [`binary_example.ipynb`](https://github.com/FeAlmassy/Genetic-Classifier/blob/main/examples/example_1_binary/binary_example.ipynb) | `binary_data_1.xlsx` (539 samples, 18 features) | 2 | **87%** |
+| [`multiclass_example.ipynb`](https://github.com/FeAlmassy/Genetic-Classifier/blob/main/examples/example_2_multiclass/multiclass_example.ipynb) | `multiclass_data.xlsx` (261 samples, 30 features) | 5 | **79%** |
+| [`mushroom_classification.ipynb`](https://github.com/FeAlmassy/Genetic-Classifier/blob/main/examples/mushroom_classification/mushroom_classification.ipynb) | `mushroom_data.xlsx` (8124 samples, 117 features) | 2 | **100%** |
+| [`heart_disease_classification.ipynb`](https://github.com/FeAlmassy/Genetic-Classifier/blob/main/examples/heart_disease_classification/heart_disease_classification.ipynb) | `heart_data.xlsx` (917 samples, 21 features) | 2 | **85%** |
+| [`diabetes_classification.ipynb`](https://github.com/FeAlmassy/Genetic-Classifier/blob/main/examples/diabetes_classification/diabetes_classification.ipynb) | `diabetes_data.xlsx` (40000 samples, 21 features) | 3 | **58%**† |
 
 \* Trained on 80% of the data and tested on the remaining 20%, which the model never saw, always with seed 0.
 
@@ -204,7 +204,7 @@ The binary notebook shows **one generation step by step**, calling each function
 ## Project structure
 
 ```
-AlgoritmoGenetico/
+Genetic-Classifier/
 ├── src/
 │   └── genetic_classifier/
 │       ├── __init__.py      # public API: train, predict, evaluate, confusion_matrix, read_excel, read_csv, train_test_split
@@ -267,7 +267,7 @@ Migrating from `algoritmo-genetico`:
 
 ## License
 
-Distributed under the [MIT license](https://github.com/FeAlmassy/AlgoritmoGenetico/blob/main/LICENSE): you can use, modify and redistribute it freely, as long as you keep the copyright notice.
+Distributed under the [MIT license](https://github.com/FeAlmassy/Genetic-Classifier/blob/main/LICENSE): you can use, modify and redistribute it freely, as long as you keep the copyright notice.
 
 ---
 
